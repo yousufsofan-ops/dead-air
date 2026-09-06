@@ -1,0 +1,340 @@
+{
+ "clips": {
+  "alarm": {
+   "file": "audio/alarm.mp3",
+   "loop": false
+  },
+  "amb_hum": {
+   "file": "audio/amb_hum.mp3",
+   "loop": true
+  },
+  "amb_music": {
+   "file": "audio/amb_music.mp3",
+   "loop": true
+  },
+  "amb_rain": {
+   "file": "audio/amb_rain.mp3",
+   "loop": true
+  },
+  "amb_space": {
+   "file": "audio/amb_space.mp3",
+   "loop": true
+  },
+  "amb_water": {
+   "file": "audio/amb_water.mp3",
+   "loop": true
+  },
+  "amb_wind": {
+   "file": "audio/amb_wind.mp3",
+   "loop": true
+  },
+  "amb_yard": {
+   "file": "audio/amb_yard.mp3",
+   "loop": true
+  },
+  "burrower_burst": {
+   "file": "audio/burrower_burst.mp3",
+   "loop": false
+  },
+  "burrower_rumble": {
+   "file": "audio/burrower_rumble.mp3",
+   "loop": false
+  },
+  "collector_chitter": {
+   "file": "audio/collector_chitter.mp3",
+   "loop": false
+  },
+  "crawler_chitter": {
+   "file": "audio/crawler_chitter.mp3",
+   "loop": false
+  },
+  "crawler_skitter_1": {
+   "file": "audio/crawler_skitter_1.mp3",
+   "loop": false
+  },
+  "crawler_skitter_2": {
+   "file": "audio/crawler_skitter_2.mp3",
+   "loop": false
+  },
+  "door_blast": {
+   "file": "audio/door_blast.mp3",
+   "loop": false
+  },
+  "door_creak": {
+   "file": "audio/door_creak.mp3",
+   "loop": false
+  },
+  "door_slam": {
+   "file": "audio/door_slam.mp3",
+   "loop": false
+  },
+  "drifter_chime": {
+   "file": "audio/drifter_chime.mp3",
+   "loop": false
+  },
+  "echo_hum_1": {
+   "file": "audio/echo_hum_1.mp3",
+   "loop": false
+  },
+  "echo_hum_2": {
+   "file": "audio/echo_hum_2.mp3",
+   "loop": false
+  },
+  "echo_whisper": {
+   "file": "audio/echo_whisper.mp3",
+   "loop": false
+  },
+  "flare": {
+   "file": "audio/flare.mp3",
+   "loop": false
+  },
+  "generator": {
+   "file": "audio/generator.mp3",
+   "loop": false
+  },
+  "hanger_creak": {
+   "file": "audio/hanger_creak.mp3",
+   "loop": false
+  },
+  "hanger_drop": {
+   "file": "audio/hanger_drop.mp3",
+   "loop": false
+  },
+  "heartbeat": {
+   "file": "audio/heartbeat.mp3",
+   "loop": false
+  },
+  "hound_bark": {
+   "file": "audio/hound_bark.mp3",
+   "loop": false
+  },
+  "hound_growl_1": {
+   "file": "audio/hound_growl_1.mp3",
+   "loop": false
+  },
+  "hound_growl_2": {
+   "file": "audio/hound_growl_2.mp3",
+   "loop": false
+  },
+  "impact_metal": {
+   "file": "audio/impact_metal.mp3",
+   "loop": false
+  },
+  "impact_soft_1": {
+   "file": "audio/impact_soft_1.mp3",
+   "loop": false
+  },
+  "impact_soft_2": {
+   "file": "audio/impact_soft_2.mp3",
+   "loop": false
+  },
+  "laugh": {
+   "file": "audio/laugh.mp3",
+   "loop": false
+  },
+  "lighteater_gurgle": {
+   "file": "audio/lighteater_gurgle.mp3",
+   "loop": false
+  },
+  "lighteater_throb": {
+   "file": "audio/lighteater_throb.mp3",
+   "loop": false
+  },
+  "mimic_skitter": {
+   "file": "audio/mimic_skitter.mp3",
+   "loop": false
+  },
+  "mimic_snap": {
+   "file": "audio/mimic_snap.mp3",
+   "loop": false
+  },
+  "mourner_scream": {
+   "file": "audio/mourner_scream.mp3",
+   "loop": false
+  },
+  "mourner_sob_1": {
+   "file": "audio/mourner_sob_1.mp3",
+   "loop": false
+  },
+  "mourner_sob_2": {
+   "file": "audio/mourner_sob_2.mp3",
+   "loop": false
+  },
+  "phone_ring": {
+   "file": "audio/phone_ring.mp3",
+   "loop": false
+  },
+  "pickup": {
+   "file": "audio/pickup.mp3",
+   "loop": false
+  },
+  "pipe_groan": {
+   "file": "audio/pipe_groan.mp3",
+   "loop": false
+  },
+  "radio_click_1": {
+   "file": "audio/radio_click_1.mp3",
+   "loop": false
+  },
+  "radio_click_2": {
+   "file": "audio/radio_click_2.mp3",
+   "loop": false
+  },
+  "radio_static": {
+   "file": "audio/radio_static.mp3",
+   "loop": false
+  },
+  "scream_distant": {
+   "file": "audio/scream_distant.mp3",
+   "loop": false
+  },
+  "shatter": {
+   "file": "audio/shatter.mp3",
+   "loop": false
+  },
+  "sleeper_breath": {
+   "file": "audio/sleeper_breath.mp3",
+   "loop": false
+  },
+  "sleeper_roar": {
+   "file": "audio/sleeper_roar.mp3",
+   "loop": false
+  },
+  "stack_creak": {
+   "file": "audio/stack_creak.mp3",
+   "loop": false
+  },
+  "step_concrete_1": {
+   "file": "audio/step_concrete_1.mp3",
+   "loop": false
+  },
+  "step_concrete_2": {
+   "file": "audio/step_concrete_2.mp3",
+   "loop": false
+  },
+  "step_concrete_3": {
+   "file": "audio/step_concrete_3.mp3",
+   "loop": false
+  },
+  "step_gravel_1": {
+   "file": "audio/step_gravel_1.mp3",
+   "loop": false
+  },
+  "step_gravel_2": {
+   "file": "audio/step_gravel_2.mp3",
+   "loop": false
+  },
+  "step_metal_1": {
+   "file": "audio/step_metal_1.mp3",
+   "loop": false
+  },
+  "step_metal_2": {
+   "file": "audio/step_metal_2.mp3",
+   "loop": false
+  },
+  "step_wet_1": {
+   "file": "audio/step_wet_1.mp3",
+   "loop": false
+  },
+  "step_wet_2": {
+   "file": "audio/step_wet_2.mp3",
+   "loop": false
+  },
+  "sting_down": {
+   "file": "audio/sting_down.mp3",
+   "loop": false
+  },
+  "sting_hit": {
+   "file": "audio/sting_hit.mp3",
+   "loop": false
+  },
+  "sting_revive": {
+   "file": "audio/sting_revive.mp3",
+   "loop": false
+  },
+  "sting_scare": {
+   "file": "audio/sting_scare.mp3",
+   "loop": false
+  },
+  "swarm_buzz": {
+   "file": "audio/swarm_buzz.mp3",
+   "loop": true
+  },
+  "throw_whoosh": {
+   "file": "audio/throw_whoosh.mp3",
+   "loop": false
+  },
+  "thunder": {
+   "file": "audio/thunder.mp3",
+   "loop": false
+  },
+  "twin_hum": {
+   "file": "audio/twin_hum.mp3",
+   "loop": false
+  },
+  "twin_shriek": {
+   "file": "audio/twin_shriek.mp3",
+   "loop": false
+  },
+  "ui_bad": {
+   "file": "audio/ui_bad.mp3",
+   "loop": false
+  },
+  "ui_cash": {
+   "file": "audio/ui_cash.mp3",
+   "loop": false
+  },
+  "ui_click": {
+   "file": "audio/ui_click.mp3",
+   "loop": false
+  },
+  "ui_ok": {
+   "file": "audio/ui_ok.mp3",
+   "loop": false
+  },
+  "vo_dispatch_1": {
+   "file": "audio/vo_dispatch_1.mp3",
+   "loop": false
+  },
+  "vo_dispatch_2": {
+   "file": "audio/vo_dispatch_2.mp3",
+   "loop": false
+  },
+  "vo_dispatch_3": {
+   "file": "audio/vo_dispatch_3.mp3",
+   "loop": false
+  },
+  "vo_intern_1": {
+   "file": "audio/vo_intern_1.mp3",
+   "loop": false
+  },
+  "vo_intern_2": {
+   "file": "audio/vo_intern_2.mp3",
+   "loop": false
+  },
+  "vo_radio_1": {
+   "file": "audio/vo_radio_1.mp3",
+   "loop": false
+  },
+  "warden_chains": {
+   "file": "audio/warden_chains.mp3",
+   "loop": false
+  },
+  "warden_roar": {
+   "file": "audio/warden_roar.mp3",
+   "loop": false
+  },
+  "warden_stomp_1": {
+   "file": "audio/warden_stomp_1.mp3",
+   "loop": false
+  },
+  "warden_stomp_2": {
+   "file": "audio/warden_stomp_2.mp3",
+   "loop": false
+  },
+  "window_ring": {
+   "file": "audio/window_ring.mp3",
+   "loop": false
+  }
+ }
+}
