@@ -419,7 +419,7 @@ const SHOP=[
 ];
 const GEAR=[
  {id:'scanner',n:'Motion Scanner Post',ic:'🛰',cost:4500,d:'Deployable. Reveals creature positions in 30m on the map for the whole team.'},
- {id:'generator',n:'Portable Generator',ic:'⚡',cost:6000,d:'Restores power to the current floor for 3 minutes. Loud. Very loud.'},
+ {id:'generator',n:'Portable Generator',ic:'⚡',cost:6000,d:'Restores power to the current floor for 60 seconds. Loud. Very loud.'},
  {id:'beacon',n:'Emergency Beacon',ic:'🚨',cost:5000,d:'Once per mission: forces the extraction door open for 60s from anywhere.'},
  {id:'crate',n:'Storage Crate',ic:'📦',cost:3500,d:'Van holds 30% more loot value before overflow penalties.'},
  {id:'detector',n:'Creature Detector',ic:'👁',cost:7000,d:'Tells you which creatures are in the site before you leave the van.'},
@@ -437,7 +437,7 @@ const ACH=[
  {id:'leave',n:'WE SHOULD LEAVE.',d:'Extract with an item worth over 5,000 credits.',i:'💰'},
  {id:'onemore',n:'ONE MORE ROOM.',d:'Stay after the emergency extraction warning and still get out.',i:'🚪'},
  {id:'quiet',n:'SHHH.',d:'Extract from a site with The Echo without it ever locating you.',i:'🤫'},
- {id:'dark',n:'LIGHTS OFF.',d:'Spend 3 minutes with your flashlight off in one mission.',i:'🌑'},
+ {id:'dark',n:'LIGHTS OFF.',d:'Spend 60 seconds with your flashlight off in one mission.',i:'🌑'},
  {id:'rich',n:'PAYDAY.',d:'Bank 20,000 credits in one mission.',i:'🏦'},
  {id:'revive',n:'GET UP.',d:'Revive a teammate.',i:'🩹'},
  {id:'phone',n:'HELLO?',d:'Answer the Black Phone.',i:'☎'},
@@ -480,7 +480,7 @@ const EVENT_DEFS=[
  {id:'elevator',w:5,minStage:2,d:'Elevator moves'},
  {id:'doorslam',w:12,minStage:1,d:'Door slams'},
  {id:'distant',w:16,minStage:1,d:'Distant noise'},
- {id:'creature',w:9,minStage:3,d:'A creature appears'},
+ {id:'creature',w:9,minStage:2,d:'A creature appears'},
  {id:'intern',w:0.4,minStage:1,d:'The Intern'},
 ];
 const CREATURES={
@@ -658,7 +658,7 @@ const ROOM_TYPES=['hall','lab','storage','office','break','freezer','archive','w
 function pickRoomType(rng,k,L){const r=rng();if(k>=L-2&&r<0.12)return 'vault';return pick(['hall','lab','storage','office','break','freezer','archive','ward','pump'],rng);}
 function genMap(seed,loc,diff,opts){
   opts=opts||{};const rng=mulberry(seed);
-  const W=clamp(loc.size+(diff.size||0)+1,10,16),H=W,L=opts.layers||loc.layers;
+  const W=clamp(Math.round((loc.size+(diff.size||0)+1)*1.22),12,19),H=W,L=opts.layers||loc.layers;
   const map={seed,loc,diff,W,H,L,layers:[],stairs:[],elev:null,van:null,exit:null,gen:null,hatch:null,items:[],docs:[],props:[],lights:[],vents:[],windows:[],doors:[],specials:{}};
   const idx=(x,z)=>z*W+x, inb=(x,z)=>x>=0&&z>=0&&x<W&&z<H;
   const cx=Math.floor(W/2);
@@ -1520,7 +1520,7 @@ function updateLights(dt){const pal=G.map.loc.pal;const cands=[];for(const l of 
   /* remote flashlights already on avatars */
 }
 /* ================= DIRECTOR / EVENTS / STAGES ================= */
-function initDirector(){G.director={aggro:0,calmUntil:0,nextEvent:40+Math.random()*30,seen:{},tick:0,distantT:20};}
+function initDirector(){G.director={aggro:0,calmUntil:0,nextEvent:25+Math.random()*20,seen:{},tick:0,distantT:20};}
 function directorTick(dt){const D=G.director;D.aggro=Math.max(0,D.aggro-dt*0.02);D.tick+=dt;
   D.nextEvent-=dt*(1+G.stage*0.12)*(G.mission.sandbox?0.4:1);
   if(D.nextEvent<=0){D.nextEvent=45+Math.random()*45;if(G.t>=D.calmUntil||Math.random()<0.3){const pool=EVENT_DEFS.filter(e=>e.minStage<=G.stage&&!(G.mission.sandbox&&e.id==='creature'));const ev=wpick(pool,Math.random,e=>e.w*Math.pow(0.35,D.seen[e.id]||0)*(S.seenEvents[e.id]?0.7:1.35));D.seen[ev.id]=(D.seen[ev.id]||0)+1;S.seenEvents[ev.id]=(S.seenEvents[ev.id]||0)+1;runEvent(ev.id);}}
@@ -1562,16 +1562,18 @@ function applyEvent(id,d,quiet){switch(id){
   case 'intern':{G.mission.intern={x:d.p[0],z:d.p[1],k:d.k};const r=Assets.rig('player');applyCosmetics(r.root,{hair:0,face:2,outfit:4,helmet:0,pack:3,acc:2,color:5});r.root.position.set(d.p[0],layerY(d.k),d.p[1]);G.scene.add(r.root);r.play('idle',0);const lab=mkLabel('☕ the intern','#ffb347');lab.position.y=2.3;r.root.add(lab);G.mission.internRig=r;break;}
 }}
 function objectiveHint(t){$('objOpt').textContent=t;}
-function updateStage(dt){const M=G.mission;if(M.sandbox)return;M.time+=dt;const f=M.time/M.total;const thr=[0,0.3,0.45,0.6,0.75,0.87,0.95];let st=1;for(let i=1;i<7;i++)if(f>=thr[i])st=i+1;
+function updateStage(dt){const M=G.mission;if(M.sandbox)return;M.time+=dt;const f=M.time/M.total;const thr=[0,0.2,0.35,0.5,0.65,0.8,0.9];let st=1;for(let i=1;i<7;i++)if(f>=thr[i])st=i+1;
   if(st!==G.stage&&(mpHost()||!MP.on)){setStage(st);if(MP.on)bcast({t:'ev',k:'stage',s:st});}
-  if(G.stage>=7){M.departT-=dt;if(M.departT<=0&&(mpHost()||!MP.on)&&M.state==='play'){finishMission('emergency');}}
+  if(G.stage>=7){M.departT-=dt;if(M.departT<=0&&(mpHost()||!MP.on)&&M.state==='play'){const v=G.map.van;let near=false;for(const p of alivePlayers()){if(p.inVan)continue;if(p.k===0&&dist2(p.pos.x,p.pos.z,v.x,v.z-2)<225)near=true;}M.grace=M.grace||0;if(near&&M.grace<30){M.grace+=dt;if(!M.graceToast){M.graceToast=true;toast('🚐 THE DRIVER SEES YOU — 30 SECONDS, RUN','big');Aud.alarm();if(MP.on)bcast({t:'ev',k:'toast',s:'🚐 THE DRIVER SEES YOU — 30 SECONDS, RUN'});}}else finishMission('emergency');}}
 }
 function setStage(st){G.stage=st;const names=['','EXPLORATION','ANOMALIES','ACTIVITY','LIGHTS FAILING','MAJOR ENTITY','COLLAPSE','EMERGENCY EXTRACTION'];$('stageN').textContent='STAGE '+st;$('stageT').textContent=names[st];$('stage').className=st>=6?'crit':st>=4?'warn':'';
   if(st>=2)toast('⚠ STAGE '+st+' · '+names[st],'big');Aud.tone(110,1.2,'sine',0.2);Aud.tone(55,1.5,'square',0.1,null,{lp:200});
   if(st===4){let n=0;for(const l of G.lights){if(Math.random()<0.6){l.on=false;l.emerg=true;n++;}}}
   if(st===5&&(mpHost()||!MP.on)){const hasMajor=G.creatures.some(c=>CREATURES[c.kind].major);const rp=randomWalkCell(G.map,hasMajor?ri(Math.random,0,G.map.L-1):0);spawnCreature(hasMajor?'hound':'warden',rp.x,rp.z,rp.k);}
   if(st===6){G.fx.rumble=true;for(const id in G.doors){const d=G.doors[id];if(!d.blast&&Math.random()<0.15)d.jam=true;}}
-  if(st===7){G.mission.departT=90;Aud.alarm();toast('🚐 THE VAN LEAVES IN 90 SECONDS','big');}
+  if(st===7){G.mission.departT=60;Aud.alarm();toast('🚐 THE VAN LEAVES IN 60 SECONDS — get inside or lose what you carry','big');}
+  if(st===6){toast('🏚 THE SITE IS COLLAPSING. The van leaves at 10:00 sharp.','big');}
+  if(st===2&&(mpHost()||!MP.on)&&!G.mission.tutorial){const near=G.creatures.some(c=>c.k===P.k&&c.visible!==false);if(!near)runEvent('creature',true);}
   if(st>=6)Aud.musicSet(Math.max(Aud.music.target||0,4));
 }
 function objectiveProgress(id){if(typeof showObjMarker==='function')setTimeout(()=>showObjMarker(6),300);const o=G.mission.objective;if(o.id!==id||o.done)return;o.done=true;toast('✅ OBJECTIVE COMPLETE: '+o.text,'big');Aud.ui('ok');updateObjHud();if(mpHost()&&MP.on)bcast({t:'ev',k:'objdone'});}
@@ -1979,8 +1981,8 @@ function refreshHubAvatar(){if(!G.hub)return;const oldYaw=G.hub.av?G.hub.av.root
 function hubTick(dt){const h=G.hub;if(!h)return;h.t+=dt;h.av.mixer.update(dt);$('hubPane').classList.toggle('locker',hubPane==='locker');$('lockerHint').style.display=hubPane==='locker'?'block':'none';if(hubPane==='locker'){if(h.spin&&!(h.dragT>G.t-3))h.av.root.rotation.y+=dt*0.7;if(h.dragYaw!==undefined){h.av.root.rotation.y=h.dragYaw;h.dragYaw=undefined;}const asp=G.cam.aspect||1.6;const camP=new THREE.Vector3(-1.8,1.32,0.72);const hfov=2*Math.atan(Math.tan(G.cam.fov*Math.PI/360)*asp);const want=Math.atan(0.5*Math.tan(hfov/2));const th=Math.atan2(-2.2-camP.x,-1.5-camP.z)+want;const look=new THREE.Vector3(camP.x+Math.sin(th)*2,0.95,camP.z+Math.cos(th)*2);G.cam.position.lerp(camP,Math.min(1,dt*3));G.cam.lookAt(look);}else{h.av.root.rotation.y=lerp(h.av.root.rotation.y,0.3,dt);G.cam.position.lerp(new THREE.Vector3(Math.sin(h.t*0.08)*1.5,2.2,6.5),dt);G.cam.lookAt(0.5,1.2,-2);}renderFrame();}
 /* ================= MISSION FLOW ================= */
 function startMission(contract,seed,late){const loc=LOCS.find(l=>l.id===contract.locId)||LOCS[0];const diff=DIFFS[contract.diffId]||DIFFS.normal;
-  G.mission={seed,contract,loc,diff,objective:JSON.parse(JSON.stringify(contract.objective)),optionals:JSON.parse(JSON.stringify(contract.optionals)),stats:{broken:0,pickups:0,drops:0,thrown:0,doors:0,docs:0,damage:0,downs:0,deaths:0,screams:0,encounters:0,revives:0},brokenValue:0,state:'play',weekly:contract.weekly||null,sandbox:contract.mode==='sandbox',tutorial:!!contract.tutorial,time:0,total:0,departT:0,baseGravity:18,metKinds:{},seenKinds:{},docsRead:0,pstats:{},intern:null,valueBoost:0,echoHunted:false,firstMajor:0,reachedDeep:false,redkey:false,hatchUsed:false,departing:false,startT:0,vanLockT:180,vanWasLocked:true};
-  const M=G.mission;M.total=(13*60)*(diff.time||1)*(1+0.12*(loc.layers-3))*(contract.weekly==='double'?0.5:1);if(contract.tutorial)M.total=999999;
+  G.mission={seed,contract,loc,diff,objective:JSON.parse(JSON.stringify(contract.objective)),optionals:JSON.parse(JSON.stringify(contract.optionals)),stats:{broken:0,pickups:0,drops:0,thrown:0,doors:0,docs:0,damage:0,downs:0,deaths:0,screams:0,encounters:0,revives:0},brokenValue:0,state:'play',weekly:contract.weekly||null,sandbox:contract.mode==='sandbox',tutorial:!!contract.tutorial,time:0,total:0,departT:0,baseGravity:18,metKinds:{},seenKinds:{},docsRead:0,pstats:{},intern:null,valueBoost:0,echoHunted:false,firstMajor:0,reachedDeep:false,redkey:false,hatchUsed:false,departing:false,startT:0,vanLockT:60,vanWasLocked:true};
+  const M=G.mission;M.total=600*(contract.weekly==='double'?0.75:1);if(contract.tutorial)M.total=999999;
   M.baseGravity=loc.lowG?7:(contract.weekly==='heavy'?27:18);G.gravity=M.baseGravity;G.stage=1;G.fx={shake:0,blind:0,glitch:0,lightsOut:0,flicker:0,mapGlitch:0};
   G.map=genMap(seed,loc,diff,{layers:contract.layers});buildColliders(G.map);
   showScreen('cine');$('cine').innerHTML='<div class="l">DEAD AIR RECOVERY SERVICES · DISPATCH</div><div class="v amb" style="margin-top:8px">'+esc(loc.name)+'</div><div class="l">CONTRACT</div><div class="v" style="font-size:16px">'+esc(M.objective.text)+'</div><div class="l">EXPECTED VALUE</div><div class="v">~'+fmt(contract.expected)+' cr</div><div class="l">DANGER</div><div class="v red">'+'☠'.repeat(contract.danger||1)+'</div><div class="l">CREW</div><div class="v" style="font-size:15px">'+(MP.on?Object.values(MP.players).map(p=>esc(p.name)).join(' · '):esc(MP.name||'You')+' (solo)')+'</div>'+(S.gear.detector?'<div class="l">DETECTOR</div><div class="v red" style="font-size:14px" id="cineDet">scanning…</div>':'')+'<div class="dim" style="margin-top:30px;font-size:12px" id="cineHint">the van is moving · talk to your crew</div>';
@@ -1994,7 +1996,7 @@ function startMission(contract,seed,late){const loc=LOCS.find(l=>l.id===contract
     for(const id in MP.players){if(+id!==P.id)createAvatar(+id,MP.players[id]);}
     setTimeout(()=>{showScreen(null);$('hud').classList.add('on');G.state='play';M.startT=G.t;showObjMarker(8);setTimeout(()=>hintOnce('objective','Press O any time to see where the objective is. Hold I for the controls card.'),3000);Aud.amb(loc.amb);Aud.musicSet(0);updateInv();updateObjHud();updateVitals();$('downed').style.display='none';document.body.style.filter='';requestLock();
       toast('🚐 Doors open. '+(M.tutorial?'Training begins.':'Get in, get rich, get out.'),'big');if(M.weekly){const w=WEEKLY.find(x=>x.id===M.weekly);toast('📆 WEEKLY ANOMALY: '+w.n+' — '+w.d);}
-      if(M.tutorial)tutorialStart();else if(S.set.showTips)setTimeout(()=>toast('💡 The van stays sealed for the first 3 minutes. Go find loot, then bring it back.'),4000);
+      if(M.tutorial)tutorialStart();else if(S.set.showTips)setTimeout(()=>toast('💡 The van stays sealed for the first 60 seconds. Go find loot, then bring it back.'),4000);
       S.missions+=1;save();},late?300:2500);},2200);}
 function startDepart(){const M=G.mission;if(M.departing||M.state!=='play')return;M.departing=true;if(MP.on)bcast({t:'ev',k:'depart',t:8});startDepartLocal(8);setTimeout(()=>{if(G.state==='play')finishMission('extract');},8000);}
 function startDepartLocal(t){toast('🚐 DEPARTING IN '+t+'s — GET IN THE VAN','big');Aud.alarm();Aud.musicSet(5);let n=t;const iv=setInterval(()=>{n--;if(n<=0||G.state!=='play'){clearInterval(iv);return;}if(n<=5){toast('🚐 '+n);Aud.tone(800,0.1,'square',0.1);}},1000);}
@@ -2117,7 +2119,7 @@ function tick(dt){const M=G.mission;if(!M)return;gamepadPoll();
     /* everyone dead? */if(mpHost()&&M.state==='play'){const pls=allPlayers();if(pls.every(p=>p.dead)||(pls.every(p=>p.dead||p.mia))){finishMission('wipe');}}
   }}
 /* ================= BOOT ================= */
-const TIPS=['Creatures hear your microphone. Whisper.','F (or middle-click) switches your flashlight off. Off is quieter. Off is also darker.','The Swarm follows light. Flashlight off, then walk. Do not run.','The Burrower feels footsteps through the floor. Crouch, or stand still.','If a teammate waves at you and their name tag is blank, it is not your teammate.','The van stays sealed for the first three minutes. Explore first.','Hold R to use the radio. It works between floors. Mostly.','Throw things at the Hanger to make it let go of your friend.','The Sleeper guards the best loot on the deepest floor. It is asleep. Keep it that way.','Q pings what you are looking at. Y waves. Both are more useful than screaming.','Fragile loot breaks when dropped. Statues are not fragile. Statues are heavy.','If a teammate calls you from a room you have not visited, confirm on the radio first.','The Collector will rob the van if nobody is near it.','Lights off makes you harder to find. It also makes the floor harder to find.'];
+const TIPS=['Creatures hear your microphone. Whisper.','F (or middle-click) switches your flashlight off. Off is quieter. Off is also darker.','The Swarm follows light. Flashlight off, then walk. Do not run.','The Burrower feels footsteps through the floor. Crouch, or stand still.','If a teammate waves at you and their name tag is blank, it is not your teammate.','The van stays sealed for the first minute. Explore first.','Hold R to use the radio. It works between floors. Mostly.','Throw things at the Hanger to make it let go of your friend.','The Sleeper guards the best loot on the deepest floor. It is asleep. Keep it that way.','Q pings what you are looking at. Y waves. Both are more useful than screaming.','Fragile loot breaks when dropped. Statues are not fragile. Statues are heavy.','If a teammate calls you from a room you have not visited, confirm on the radio first.','The Collector will rob the van if nobody is near it.','Lights off makes you harder to find. It also makes the floor harder to find.'];
 function boot(){initRenderer();applySettings();initTouch();if(S.set.touch&&!S.set.gfxTouch){S.set.gfxTouch=true;S.set.gfx=Math.min(S.set.gfx,1);save();applySettings();}
   $('gl').addEventListener('webglcontextlost',e=>{e.preventDefault();sysMsg('Graphics crashed (GPU reset or out of memory). Reload the page (F5) and lower Graphics in Settings.','err',999);});
   window.addEventListener('error',e=>{if(G.state==='play')onFrameError(e.error||e.message);});let ti=0;$('tips').textContent='TIP: '+TIPS[0];const tipIv=setInterval(()=>{ti=(ti+1)%TIPS.length;$('tips').textContent='TIP: '+TIPS[ti];},4500);MP.name=S.cos.name||('Recruit-'+Math.floor(Math.random()*90+10));
