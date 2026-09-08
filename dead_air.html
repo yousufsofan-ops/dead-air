@@ -257,7 +257,7 @@ body.touch #hudHints{display:none}
     <div><span class="kb">F</span> flashlight (middle click too) · <span class="kb">G</span> flare (if you have any)</div>
     <div><span class="kb">Q</span> ping what you look at · hold <span class="kb">Q</span> + <span class="kb">1-7</span> ping types · <span class="kb">Y</span> wave</div>
     <div><span class="kb">V</span> hold to talk (proximity) · <span class="kb">R</span> hold: radio, works between floors · <span class="kb">N</span> mute</div>
-    <div><span class="kb">M</span> map · <span class="kb">O</span> show the objective · <span class="kb">T</span> text chat</div>
+    <div><span class="kb">M</span> map · <span class="kb">O</span> show the objective (press again: stairs up / stairs down) · <span class="kb">T</span> text chat</div>
     <div><span class="kb">P</span> third-person camera · <span class="kb">J</span> unstick · <span class="kb">Esc</span> pause and settings</div>
     <div><span class="kb">I</span> hold to show this card · <span class="kb">H</span> use a medkit · the compass at the top always points to the van</div>
   </div><div class="dim" style="margin-top:10px;font-size:11px">Creatures hear your microphone. The van opens after the first minute. Loot only counts once it is inside the van.</div></div>
@@ -984,6 +984,9 @@ function attachComposer(){if(!THREE.EffectComposer||!G.scene)return;try{const w=
 let _glowTex=null;function glowTex(){if(_glowTex)return _glowTex;const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');const g=x.createRadialGradient(64,64,2,64,64,64);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(0.25,'rgba(255,255,255,0.45)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,128,128);_glowTex=new THREE.CanvasTexture(c);return _glowTex;}
 function glowSprite(color,scale,opacity){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(),color,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:opacity||0.4}));sp.scale.set(scale,scale*0.6,1);return sp;}
 function surfaceAt(k,x,z){const c=cellAt(G.map,k,x,z);if(c===T_YARD)return 'gravel';if(c===T_STAIR)return 'metal';if(G.map.loc.wet)return 'wet';return 'concrete';}
+const _signTex={};
+function stairSign(txt,color,x,y,z){let tex=_signTex[txt];if(!tex){const c=document.createElement('canvas');c.width=256;c.height=96;const g=c.getContext('2d');g.fillStyle='rgba(6,10,8,0.85)';g.fillRect(4,10,248,76);g.strokeStyle=color;g.lineWidth=4;g.strokeRect(4,10,248,76);g.font='bold 44px Segoe UI, sans-serif';g.textAlign='center';g.fillStyle=color;g.shadowColor=color;g.shadowBlur=14;g.fillText(txt,128,64);tex=new THREE.CanvasTexture(c);_signTex[txt]=tex;}
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,fog:false}));sp.scale.set(1.9,0.72,1);sp.position.set(x,y,z);sp.renderOrder=50;sp.userData.own=true;return sp;}
 function clearScene(){if(G.scene){G.scene.traverse(o=>{if(o.geometry&&o.userData.own)o.geometry.dispose();});}G.composer=null;G.lightning=null;G.crLights=[];G.scene=new THREE.Scene();G.objs=[];G.objById={};G.creatures=[];G.doors={};G.lights=[];G.lightPool=[];G.props=[];G.docs=[];G.avatars={};G.pings=[];G.markers=[];G.flareObjs=[];G.lamps={};G.elevator=null;}
 function buildWorld(map){
   clearScene();const sc=G.scene,pal=map.loc.pal;
@@ -1021,7 +1024,7 @@ function buildWorld(map){
     for(const v of map.vents.filter(v=>v.k===k)){const vm=Assets.clone('props','vent');vm.position.set(v.x,y+WALL_H-0.02,v.z);grp.add(vm);v.mesh=vm;}
     /* stairs rails + ramp */
     for(const st of map.stairs.filter(s=>s.k===k)){const len=Math.hypot(3*CELL,LAYER_GAP);const ramp=new THREE.Mesh(new THREE.BoxGeometry(CELL-0.5,0.3,len),floorMat);ramp.receiveShadow=true;ramp.castShadow=true;
-      const cx=st.x*CELL+CELL/2+st.dx*CELL,cz=st.z*CELL+CELL/2+st.dz*CELL;ramp.position.set(cx,y-LAYER_GAP/2-0.15,cz);const yaw=Math.atan2(st.dx,st.dz);ramp.rotation.order='YXZ';ramp.rotation.y=yaw;ramp.rotation.x=Math.atan2(LAYER_GAP,3*CELL);sc.add(ramp);
+      const cx=st.x*CELL+CELL/2+st.dx*CELL,cz=st.z*CELL+CELL/2+st.dz*CELL;ramp.position.set(cx,y-LAYER_GAP/2-0.15,cz);const yaw=Math.atan2(st.dx,st.dz);ramp.rotation.order='YXZ';ramp.rotation.y=yaw;ramp.rotation.x=Math.atan2(LAYER_GAP,3*CELL);sc.add(ramp);sc.add(stairSign('▼ DOWN','#7ddc7d',(st.x-st.dx+0.5)*CELL,y+2.55,(st.z-st.dz+0.5)*CELL));sc.add(stairSign('▲ UP','#ffd27a',(st.x+st.dx*3+0.5)*CELL,layerY(k+1)+2.55,(st.z+st.dz*3+0.5)*CELL));
       for(const s of [-1,1]){const rail=Assets.clone('props','stairs_rail');rail.position.set(cx+Math.cos(yaw)*s*(CELL/2-0.35),y-LAYER_GAP/2+0.1,cz-Math.sin(yaw)*s*(CELL/2-0.35));rail.rotation.order='YXZ';rail.rotation.y=yaw;rail.rotation.x=Math.atan2(LAYER_GAP,3*CELL);sc.add(rail);}
       /* end walls to close the shaft top opening above the lower layer exit */}
     /* props */
@@ -2005,7 +2008,7 @@ function updateTeamHud(){let h='';for(const id in G.avatars){const a=G.avatars[i
 function updateHud(dt){hudT+=dt;if(P.hurtT>0)P.hurtT-=dt;if(hudT<0.1)return;hudT=0;updateVitals();updateTeamHud();updateVanHud();
   const n=P.lastNoise;$('noiseT').textContent=n>0.6?'LOUD':n>0.25?'noisy':n>0.08?'low':'quiet';$('noiseT').style.color=n>0.6?'#ff4d4d':n>0.25?'#ffb347':'#fff';
   if(subT<G.t)$('sub').textContent='';
-  {const m=G.map;const dx=m.van.x-P.pos.x,dz=(m.van.z-2)-P.pos.z;const d=Math.hypot(dx,dz);const fx=-Math.sin(P.yaw),fz=-Math.cos(P.yaw),rx=Math.cos(P.yaw),rz=-Math.sin(P.yaw);const ang=Math.atan2(dx*rx+dz*rz,dx*fx+dz*fz);$('cArrow').style.transform='rotate('+(ang*180/Math.PI-90)+'deg)';$('lockHint').style.display=(!G.paused&&!NOLOCK&&!G.fallbackLook&&!TOUCH.on&&!P.dead&&document.pointerLockElement!==$('gl'))?'block':'none';$('touchUI').style.display=(TOUCH.on&&!G.paused&&!P.dead)?'block':'none';$('cTxt').textContent='VAN '+Math.round(d)+'m'+(P.k>0?' · '+P.k+' floor'+(P.k>1?'s':'')+' up':'')+(vanLocked()?' · locked':'');}
+  {const m=G.map;const dx=m.van.x-P.pos.x,dz=(m.van.z-2)-P.pos.z;const d=Math.hypot(dx,dz);const fx=-Math.sin(P.yaw),fz=-Math.cos(P.yaw),rx=Math.cos(P.yaw),rz=-Math.sin(P.yaw);const ang=Math.atan2(dx*rx+dz*rz,dx*fx+dz*fz);$('cArrow').style.transform='rotate('+(ang*180/Math.PI-90)+'deg)';$('lockHint').style.display=(!G.paused&&!NOLOCK&&!G.fallbackLook&&!TOUCH.on&&!P.dead&&document.pointerLockElement!==$('gl'))?'block':'none';$('touchUI').style.display=(TOUCH.on&&!G.paused&&!P.dead)?'block':'none';$('cTxt').textContent='VAN '+Math.round(d)+'m'+(P.k>0?' · '+P.k+' floor'+(P.k>1?'s':'')+' up · O: stairs':'')+(vanLocked()?' · locked':'');}
   updateObjMarker();contextHints();
   const t=lookTarget();const pr=$('prompt');if(t&&!(K.KeyE&&P.useT>0)){pr.style.display='block';pr.textContent='[E] '+t.label;$('xh').className=t.kind==='obj'?'grab':'';}else if(!(K.KeyE&&P.useT>0)){pr.style.display='none';$('xh').className='';}
   if(!G.mission.sandbox){const rem=Math.max(0,G.mission.total-G.mission.time);$('stageN').textContent='STAGE '+G.stage+' · '+(G.stage>=7?'VAN LEAVES '+Math.ceil(G.mission.departT)+'s':Math.floor(rem/60)+':'+String(Math.floor(rem%60)).padStart(2,'0'));}
@@ -2032,8 +2035,8 @@ function markSeen(){const lay=G.map.layers[P.k];if(!lay.seen)lay.seen=new Uint8A
 function drawMap(){const c=$('mapC'),x=c.getContext('2d');const m=G.map,lay=m.layers[mapLayer];const sc=c.width/(m.W*CELL);x.fillStyle='#0b0f12';x.fillRect(0,0,c.width,c.height);$('mapLayer').textContent=LAYER_NAMES[mapLayer]+(mapLayer===P.k?' (you)':'');
   const gl=G.fx.mapGlitch>0&&!S.gear.mapper;const jx=gl?(Math.random()-0.5)*20:0,jy=gl?(Math.random()-0.5)*20:0;
   const seen=lay.seen||new Uint8Array(m.W*m.H);
-  for(let z=0;z<m.H;z++)for(let xx=0;xx<m.W;xx++){const t=lay.cells[z*m.W+xx];if(t===T_VOID)continue;let vis=seen[z*m.W+xx]||(t===T_YARD&&mapLayer===0);if(gl&&Math.random()<0.15)vis=!vis;if(!vis)continue;x.fillStyle=t===T_ROOM?(lay.rooms[lay.room[z*m.W+xx]]&&lay.rooms[lay.room[z*m.W+xx]].type==='vault'?'#3a2020':'#26323a'):t===T_CORR?'#1b2428':t===T_STAIR?'#2e3a2a':t===T_YARD?'#151a1c':'#3a3020';x.fillRect(xx*CELL*sc+1+jx,z*CELL*sc+1+jy,CELL*sc-2,CELL*sc-2);
-    if(t===T_STAIR){x.fillStyle='#7ddc7d';x.font='12px sans-serif';x.fillText('▼',xx*CELL*sc+CELL*sc/2-5+jx,z*CELL*sc+CELL*sc/2+4+jy);}if(t===T_ELEV){x.fillStyle='#ffb347';x.fillText('E',xx*CELL*sc+CELL*sc/2-4+jx,z*CELL*sc+CELL*sc/2+4+jy);}}
+  for(let z=0;z<m.H;z++)for(let xx=0;xx<m.W;xx++){const t=lay.cells[z*m.W+xx];if(t===T_VOID)continue;let vis=seen[z*m.W+xx]||(t===T_YARD&&mapLayer===0)||t===T_STAIR;if(gl&&Math.random()<0.15)vis=!vis;if(!vis)continue;x.fillStyle=t===T_ROOM?(lay.rooms[lay.room[z*m.W+xx]]&&lay.rooms[lay.room[z*m.W+xx]].type==='vault'?'#3a2020':'#26323a'):t===T_CORR?'#1b2428':t===T_STAIR?'#2e3a2a':t===T_YARD?'#151a1c':'#3a3020';x.fillRect(xx*CELL*sc+1+jx,z*CELL*sc+1+jy,CELL*sc-2,CELL*sc-2);
+    if(t===T_STAIR){const sst=lay.stairAt[z*m.W+xx];const upS=sst&&sst.k!==mapLayer;x.fillStyle=upS?'#ffd27a':'#7ddc7d';x.font='bold 12px sans-serif';x.fillText(upS?'▲':'▼',xx*CELL*sc+CELL*sc/2-5+jx,z*CELL*sc+CELL*sc/2+4+jy);}if(t===T_ELEV){x.fillStyle='#ffb347';x.fillText('E',xx*CELL*sc+CELL*sc/2-4+jx,z*CELL*sc+CELL*sc/2+4+jy);}}
   x.strokeStyle='#4a5a66';x.lineWidth=2;for(const w of lay.walls){const cx=Math.floor(w.x/CELL),cz=Math.floor(w.z/CELL);const near=[[cx,cz],[cx-(w.rot===1?1:0),cz-(w.rot===1?0:1)]].some(([a,b])=>a>=0&&b>=0&&a<m.W&&b<m.H&&seen[b*m.W+a]);if(!near)continue;x.beginPath();if(w.rot===1){x.moveTo(w.x*sc+jx,(w.z-w.len/2)*sc+jy);x.lineTo(w.x*sc+jx,(w.z+w.len/2)*sc+jy);}else{x.moveTo((w.x-w.len/2)*sc+jx,w.z*sc+jy);x.lineTo((w.x+w.len/2)*sc+jx,w.z*sc+jy);}x.stroke();}
   for(const d of lay.doors){const cx=Math.floor(d.x/CELL),cz=Math.floor(d.z/CELL);if(!seen[cz*m.W+cx]&&!seen[(cz-1)*m.W+cx]&&!seen[cz*m.W+cx-1])continue;x.fillStyle=d.locked?'#ff4d4d':d.open>0.5?'#7ddc7d':'#c9a86a';x.fillRect(d.x*sc-4+jx,d.z*sc-4+jy,8,8);}
   if(mapLayer===0){x.fillStyle='#ffb347';x.font='bold 11px sans-serif';x.fillText('🚐 VAN',m.van.x*sc-16,m.van.z*sc+4);if(m.hatch.found){x.fillStyle='#7ddc7d';x.fillText('HATCH',m.hatch.x*sc-16,m.hatch.z*sc+4);}}
@@ -2409,7 +2412,7 @@ addEventListener('keydown',e=>{const tag=(e.target.tagName||'').toLowerCase();if
     case 'KeyN':if(!e.repeat)voiceMute();break;
     case 'KeyY':if(!e.repeat)doEmote('wave');break;
     case 'KeyJ':if(!e.repeat)unstick();break;
-    case 'KeyO':if(!e.repeat){showObjMarker(6);Aud.ui('click');}break;
+    case 'KeyO':if(!e.repeat)objCycle();break;
     case 'KeyI':$('ctrlCard').style.display='block';break;
     case 'KeyP':if(!e.repeat){S.set.tp=!S.set.tp;save();Aud.ui('click');toast(S.set.tp?'🎥 Third-person camera (P to switch back)':'🎥 First-person camera');}break;
     case 'Digit1':case 'Digit2':case 'Digit3':case 'Digit4':case 'Digit5':case 'Digit6':case 'Digit7':{const n=+e.code.slice(5);if(K.KeyQ){qWheel=true;doPing(PING_TYPES[n-1]&&PING_TYPES[n-1].k);$('pingWheel').style.display='none';}else if(n<=7)takePocket(n-1);break;}
@@ -2496,7 +2499,14 @@ $('gl').addEventListener('touchend',()=>{if(G.hub)G.hub.drag=null;});
 
 /* ---------- clarity pack: objective target, marker, hint line, creature cards, contextual hints ---------- */
 function floorName(k){return k===0?'ground floor':'floor B'+k;}
-function objTarget(){const M=G.mission;if(!M||!G.map)return null;const o=M.objective;const m=G.map;const van={x:m.van.x,z:m.van.z-2,k:0,label:'VAN',hint:'Bring it to the van (ground floor). The compass points there.'};
+/* nearest staircase on floor k that leads up (toward the van) or down; returns the entrance cell in world units */
+function nearestStairs(k,up,x,z){let best=null,bd=1e9;for(const st of G.map.stairs){let ex,ez;if(up){if(st.k!==k-1)continue;ex=(st.x+st.dx*3+0.5)*CELL;ez=(st.z+st.dz*3+0.5)*CELL;}else{if(st.k!==k)continue;ex=(st.x-st.dx+0.5)*CELL;ez=(st.z-st.dz+0.5)*CELL;}const d=dist2(ex,ez,x,z);if(d<bd){bd=d;best={x:ex,z:ez,k,st};}}return best;}
+function objTarget(){const raw=objTargetRaw();const mode=G.objMode||0;
+  if(mode===1||mode===2){const up=mode===1;if(up&&P.k===0)return {x:G.map.van.x,z:G.map.van.z-2,k:0,label:'VAN',hint:'You are on the ground floor. The van is the way out.'};const s=nearestStairs(P.k,up,P.pos.x,P.pos.z);if(!s)return {x:P.pos.x,z:P.pos.z,k:P.k,nomark:true,label:'NO STAIRS',hint:up?'No stairs up from here. Try the elevator or another floor.':'This is the lowest floor.'};return {...s,label:'STAIRS '+(up?'UP':'DOWN'),hint:'Nearest stairs '+(up?'up':'down')+'. Press O again to switch.'};}
+  if(raw&&!raw.nomark&&raw.k!==P.k){const up=raw.k<P.k;const s=nearestStairs(P.k,up,P.pos.x,P.pos.z);if(s){const fl=Math.abs(raw.k-P.k);return {...s,label:'STAIRS '+(up?'UP':'DOWN')+' → '+raw.label+' ('+fl+' floor'+(fl>1?'s':'')+(up?' up':' down')+')',hint:raw.hint+' The marker leads to the nearest stairs '+(up?'up':'down')+'.'};}}
+  return raw;}
+function objCycle(){if(G.objMarkT>G.t&&G.t-(G.objPressT||0)<3){G.objMode=((G.objMode||0)+1)%3;}else G.objMode=0;G.objPressT=G.t;showObjMarker(6);Aud.ui('click');const names=['objective','stairs up','stairs down'];if(G.objMode)toast('◎ Marker: '+names[G.objMode]+' (press O again to switch)');}
+function objTargetRaw(){const M=G.mission;if(!M||!G.map)return null;const o=M.objective;const m=G.map;const van={x:m.van.x,z:m.van.z-2,k:0,label:'VAN',hint:'Bring it to the van (ground floor). The compass points there.'};
   const carriedOrVan=(obj,what)=>{if(!obj)return null;if(obj.inVan)return null;if(obj.held===P.id)return {...van,hint:'You have '+what+'. Get it into the van.'};if(obj.held!==null)return {...van,hint:'A teammate has '+what+'. Cover them to the van.'};return {x:obj.p.x,z:obj.p.z,k:obj.k,label:what.toUpperCase(),hint:what[0].toUpperCase()+what.slice(1)+' is on the '+floorName(obj.k)+'. Pick it up with E, then carry it to the van.'};};
   if(o.done)return {...van,hint:'Objective complete. Everyone to the van; loot only counts inside it.'};
   switch(o.id){
@@ -2516,7 +2526,7 @@ function updateObjMarker(){const t=objTarget();const hint=$('objHint');if(hint){
   const show=G.objMarkT>G.t&&t&&!t.nomark&&!P.dead;if(!_objMark){const c=document.createElement('canvas');c.width=256;c.height=96;const x=c.getContext('2d');x.font='bold 40px Segoe UI, sans-serif';x.textAlign='center';x.fillStyle='#ffd27a';x.fillText('◎',128,44);x.font='bold 22px Segoe UI, sans-serif';x.fillText('OBJECTIVE',128,84);const tex=new THREE.CanvasTexture(c);_objMark=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false}));_objMark.scale.set(2.2,0.85,1);_objMark.renderOrder=999;_objMark.visible=false;}
   if(show&&_objMark.parent!==G.scene)G.scene.add(_objMark);_objMark.visible=!!show;if(!show)return;
   const rem=G.objMarkT-G.t;_objMark.position.set(t.x,layerY(t.k)+1.7+Math.sin(G.t*3)*0.08,t.z);_objMark.material.opacity=Math.min(1,rem);
-  const d=Math.round(Math.hypot(t.x-P.pos.x,t.z-P.pos.z));const fl=t.k-P.k;if(!G._objSub||G.t-G._objSub>0.5){G._objSub=G.t;subtitle(t.label+' · '+d+'m'+(fl?(' · '+Math.abs(fl)+' floor'+(Math.abs(fl)>1?'s':'')+(fl>0?' down':' up')):''));}}
+  if(P.k!==G._lastK){G._lastK=P.k;G.floorT=G.t;}const d=Math.round(Math.hypot(t.x-P.pos.x,t.z-P.pos.z));const fl=t.k-P.k;if(!G._objSub||G.t-G._objSub>0.5){G._objSub=G.t;subtitle(t.label+' · '+d+'m'+(fl?(' · '+Math.abs(fl)+' floor'+(Math.abs(fl)>1?'s':'')+(fl>0?' down':' up')):''));}}
 function creatureCard(kind){const c=CREATURES[kind];if(!c)return;$('crName').textContent=c.ic+' '+c.n;$('crDesc').textContent=c.d;const el=$('crCard');el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>{el.style.display='none';},8000);Aud.sting&&Aud.sting('scare');}
 function hintOnce(id,text){if(!S.hints)S.hints={};if(S.hints[id])return false;S.hints[id]=true;save();toast('💡 '+text,'big');return true;}
 function contextHints(){if(G.state!=='play'||G.paused||P.dead||!G.mission||G.mission.tutorial)return;G._hintT=(G._hintT||0)+1;if(G._hintT%25!==0)return;const M=G.mission;const since=G.t-(M.startT||0);
@@ -2524,7 +2534,7 @@ function contextHints(){if(G.state!=='play'||G.paused||P.dead||!G.mission||G.mis
   if(vanLocked()&&(P.hands||P.pockets.length))hintOnce('vanlock','The van stays sealed for the first minute. Keep looting; the compass at the top always points back to it.');
   if(P.batt<0.25)hintOnce('batt','Battery low. F switches the light off to save it. Spare batteries are sold in Requisitions.');
   if(P.stamina<0.08)hintOnce('sprint','Out of breath. Sprinting is loud and creatures hear it. Crouch to move quietly.');
-  if(P.k!==0)hintOnce('stairs','Deeper floors pay more and have worse company. The compass shows how many floors up the van is.');
+  if(P.k!==0)hintOnce('stairs','Deeper floors pay more and have worse company. Press O: the marker leads you to the nearest stairs up. Press O again to switch between stairs up and down. Glowing UP / DOWN signs hang over every staircase.');if(P.k!==0&&G.floorT!==undefined&&G.t-G.floorT>150)hintOnce('lost','Lost? Press O for the nearest stairs up, or open the map (M): every staircase is marked, ▲ up and ▼ down.');
   if(MP.on){let far=false,down=false;for(const id in G.avatars){const a=G.avatars[id];if(a.dead)continue;if(a.downed&&a.k===P.k&&a.pos.distanceTo(P.pos)<15)down=true;if(a.k!==P.k||a.pos.distanceTo(P.pos)>22)far=true;}
     if(down)hintOnce('revive','A teammate is down. Hold E on them to get them back up.');
     if(far&&since>45)hintOnce('radio','Teammates are far away. Hold R to talk on the radio; it works between floors, mostly.');
