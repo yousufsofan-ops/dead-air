@@ -4,6 +4,10 @@
    "file": "audio/alarm.mp3",
    "loop": false
   },
+  "amb_home": {
+   "file": "audio/amb_home.mp3",
+   "loop": true
+  },
   "amb_hum": {
    "file": "audio/amb_hum.mp3",
    "loop": true
@@ -310,6 +314,14 @@
   },
   "vo_dispatch_after": {
    "file": "audio/vo_dispatch_after.mp3",
+   "loop": false
+  },
+  "vo_home": {
+   "file": "audio/vo_home.mp3",
+   "loop": false
+  },
+  "vo_home_after": {
+   "file": "audio/vo_home_after.mp3",
    "loop": false
   },
   "vo_intern_1": {

@@ -91,9 +91,12 @@ CLIPS = [
     S('amb_rain', 'seamless rain on a tin roof of a forest research station, wind in trees', 16, 0.4, loop=True),
     S('amb_space', 'seamless derelict space station interior hum, low electrical drone, distant metallic ticking', 16, 0.4, loop=True),
     S('amb_music', 'seamless distant broken carnival music box playing slow and off key through tunnels, eerie', 16, 0.45, loop=True),
+    S('amb_home', 'seamless quiet suburban street at three in the morning, crickets, a porch light buzzing, one distant dog bark, very soft wind', 14, 0.4, loop=True),
     S('amb_yard', 'seamless night rain in an industrial yard, distant thunder, a van engine idling', 16, 0.4, loop=True),
 ]
 VOICE = [
+    ('vo_home', 'You are home. Take your medication, and go to sleep. Dispatch will call you at six.'),
+    ('vo_home_after', 'You are home. Take your medication. Sleep. We are already inside.'),
     ('vo_dispatch_after', 'Welcome back, recovery team. There is no site today. Come home. You are part of us now.'),
     ('vo_dispatch_1', 'Dead Air Recovery Services. Your contract is active. Recover what you can, and come back with all of your fingers.'),
     ('vo_dispatch_2', 'Reminder: the company is not responsible for anything that happens below the surface level.'),
