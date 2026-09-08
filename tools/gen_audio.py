@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-"""DEAD AIR — ElevenLabs sound set generator.
+﻿#!/usr/bin/env python3
+"""DEAD AIR â€” ElevenLabs sound set generator.
 
 Usage (from the dead-air folder):
     set ELEVENLABS_API_KEY=your_key      (Windows)     or    export ELEVENLABS_API_KEY=your_key
@@ -63,6 +63,7 @@ CLIPS = [
     S('lighteater_gurgle', 'wet gurgling slurp of a creature swallowing, disgusting', 1.5, 0.65),
     S('hound_growl', 'low guttural growl of a large hollow chested dog creature, breathing, threatening', 1.8, 0.65, n=2),
     S('hound_bark', 'sharp aggressive bark snarl of a large monstrous dog', 0.8, 0.75),
+    S('amb_static', 'empty television studio room tone, faint dead-channel static hiss and electrical hum, seamless loop, no voices', 8.0, 0.4, True),
     S('stack_creak', 'wooden crate creaking and splintering as something moves inside it', 1.3, 0.6),
     S('mimic_snap', 'a wooden chest lid snapping shut with a wet bite, teeth clacking, short', 0.8, 0.7),
     S('mimic_skitter', 'a heavy box scuttling fast on many chitinous legs across a hard floor', 1.6, 0.6),
@@ -159,3 +160,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

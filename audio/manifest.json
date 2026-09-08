@@ -20,6 +20,10 @@
    "file": "audio/amb_space.mp3",
    "loop": true
   },
+  "amb_static": {
+   "file": "audio/amb_static.mp3",
+   "loop": true
+  },
   "amb_water": {
    "file": "audio/amb_water.mp3",
    "loop": true
