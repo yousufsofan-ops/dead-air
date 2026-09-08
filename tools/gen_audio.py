@@ -94,6 +94,7 @@ CLIPS = [
     S('amb_yard', 'seamless night rain in an industrial yard, distant thunder, a van engine idling', 16, 0.4, loop=True),
 ]
 VOICE = [
+    ('vo_dispatch_after', 'Welcome back, recovery team. There is no site today. Come home. You are part of us now.'),
     ('vo_dispatch_1', 'Dead Air Recovery Services. Your contract is active. Recover what you can, and come back with all of your fingers.'),
     ('vo_dispatch_2', 'Reminder: the company is not responsible for anything that happens below the surface level.'),
     ('vo_dispatch_3', 'Vehicle departure is not negotiable. Be inside it.'),
@@ -160,4 +161,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 

@@ -308,6 +308,10 @@
    "file": "audio/vo_dispatch_3.mp3",
    "loop": false
   },
+  "vo_dispatch_after": {
+   "file": "audio/vo_dispatch_after.mp3",
+   "loop": false
+  },
   "vo_intern_1": {
    "file": "audio/vo_intern_1.mp3",
    "loop": false
