@@ -649,6 +649,7 @@ const Aud={ctx:null,master:null,sfx:null,mus:null,voiceBus:null,noiseBuf:null,co
 };
 document.addEventListener('pointerdown',()=>Aud.init(),{once:false});
 document.addEventListener('keydown',()=>Aud.init(),{once:false});
+function edgeKeyG(a,b,c,d){return a<c||(a===c&&b<d)?a+','+b+'|'+c+','+d:c+','+d+'|'+a+','+b;}
 /* ================= PROCEDURAL SITE GENERATION ================= */
 const CELL=6,WALL_H=3.4,LAYER_GAP=9,DOOR_W=1.1,BLAST_W=2.4;
 const layerY=k=>-k*LAYER_GAP;
@@ -662,7 +663,7 @@ function genMap(seed,loc,diff,opts){
   const map={seed,loc,diff,W,H,L,layers:[],stairs:[],elev:null,van:null,exit:null,gen:null,hatch:null,items:[],docs:[],props:[],lights:[],vents:[],windows:[],doors:[],specials:{}};
   const idx=(x,z)=>z*W+x, inb=(x,z)=>x>=0&&z>=0&&x<W&&z<H;
   const cx=Math.floor(W/2);
-  for(let k=0;k<L;k++)map.layers.push({k,cells:new Uint8Array(W*H),room:new Int16Array(W*H).fill(-1),rooms:[],req:[],walls:[],doors:[],stairAt:{},ends:[]});
+  for(let k=0;k<L;k++)map.layers.push({k,cells:new Uint8Array(W*H),room:new Int16Array(W*H).fill(-1),rooms:[],req:[],walls:[],blocked:new Set(),doors:[],stairAt:{},ends:[]});
   const reserved=(k,x,z)=>map.layers[k].cells[idx(x,z)]!==T_VOID;
   /* ---- 1. reserve yard ---- */
   {const lay=map.layers[0];for(let z=H-2;z<H;z++)for(let x=Math.max(0,cx-3);x<=Math.min(W-1,cx+3);x++){lay.cells[idx(x,z)]=T_YARD;}}
@@ -743,7 +744,7 @@ function genMap(seed,loc,diff,opts){
     for(let z=0;z<H;z++)for(let x=0;x<W;x++){const c=lay.cells[idx(x,z)];if(c===T_VOID)continue;
       for(let d=0;d<4;d++){const nx=x+DIRS[d][0],nz=z+DIRS[d][1];const n=inb(nx,nz)?lay.cells[idx(nx,nz)]:T_VOID;
         const wx=(x+0.5+DIRS[d][0]*0.5)*CELL,wz=(z+0.5+DIRS[d][1]*0.5)*CELL,rot=d%2===0?1:0;
-        const W_=()=>lay.walls.push({x:wx,z:wz,rot,len:CELL,k});
+        const W_=()=>{lay.walls.push({x:wx,z:wz,rot,len:CELL,k});if(n!==T_VOID&&inb(nx,nz))lay.blocked.add(edgeKey(x,z,nx,nz));};
         if(c===T_STAIR||n===T_STAIR){if(c===T_STAIR&&n===T_STAIR)continue;if(n!==T_VOID&&idx(nx,nz)<idx(x,z))continue;
           const st=c===T_STAIR?lay.stairAt[idx(x,z)]:lay.stairAt[idx(nx,nz)];const ddx=c===T_STAIR?DIRS[d][0]:-DIRS[d][0],ddz=c===T_STAIR?DIRS[d][1]:-DIRS[d][1];
           const other=c===T_STAIR?n:c;const along=ddx*st.dx+ddz*st.dz;
@@ -768,6 +769,23 @@ function genMap(seed,loc,diff,opts){
         else W_();
       }}
   }
+  /* ---- 6b. physical connectivity: walls are real now, so search through them from the reached area to any sealed room/stair end and punch doors along the way ---- */
+  const punch=(lay,k,x,z,nx,nz)=>{const d=DIRS.findIndex(v=>v[0]===nx-x&&v[1]===nz-z);if(d<0)return;const ek=edgeKey(x,z,nx,nz);if(!lay.blocked.has(ek))return;
+    const wx=(x+0.5+DIRS[d][0]*0.5)*CELL,wz=(z+0.5+DIRS[d][1]*0.5)*CELL,rot=d%2===0?1:0;
+    const wi=lay.walls.findIndex(w=>Math.abs(w.x-wx)<0.01&&Math.abs(w.z-wz)<0.01&&w.rot===rot&&w.len===CELL);if(wi>=0)lay.walls.splice(wi,1);
+    lay.blocked.delete(ek);const dObj={id:'d'+k+'_'+(doorId++),x:wx,z:wz,rot,k,open:1,target:1,locked:false,red:false,jam:false,broken:false,cells:[[x,z],[nx,nz]]};lay.doors.push(dObj);map.doors.push(dObj);addWallPieces(lay,wx,wz,rot,DOOR_W,k,'door');};
+  const plain=(lay,x,z)=>{const c=lay.cells[idx(x,z)];return c===T_ROOM||c===T_CORR;};
+  for(let iter=0;iter<60;iter++){const reach=reachFrom(map,0,map.spawn.x,map.spawn.z);let fixed=false;
+    for(let k=0;k<L&&!fixed;k++){const lay=map.layers[k];const isTarget=new Set();
+      for(const r of lay.rooms){const i=idx(r.x,r.z);if(!reach.has(k*W*H+i))isTarget.add(i);}
+      for(const e of lay.ends||[]){if(inb(e[0],e[1])){const i=idx(e[0],e[1]);if(!reach.has(k*W*H+i)&&plain(lay,e[0],e[1]))isTarget.add(i);}}
+      if(!isTarget.size)continue;
+      /* BFS over plain cells of this layer, starting from every reached plain cell, ignoring walls */
+      const prev=new Map();const q=[];for(let z=0;z<H;z++)for(let x=0;x<W;x++){const i=idx(x,z);if(reach.has(k*W*H+i)&&plain(lay,x,z)){prev.set(i,-1);q.push(i);}}
+      let hit=-1,qi=0;while(qi<q.length&&hit<0){const cur=q[qi++];const cx=cur%W,cz=Math.floor(cur/W);for(const dd of DIRS){const nx=cx+dd[0],nz=cz+dd[1];if(!inb(nx,nz)||!plain(lay,nx,nz))continue;const ni=idx(nx,nz);if(prev.has(ni))continue;prev.set(ni,cur);if(isTarget.has(ni)){hit=ni;break;}q.push(ni);}}
+      if(hit<0)continue;
+      let cur=hit;while(prev.get(cur)>=0){const p=prev.get(cur);punch(lay,k,p%W,Math.floor(p/W),cur%W,Math.floor(cur/W));cur=p;}fixed=true;}
+    if(!fixed)break;}
   /* ---- 7. vents, lights, props, loot, docs ---- */
   _darkLoc=!!loc.dark;
   const lootMult=(diff.mult||1)*(loc.loot||1);
@@ -791,6 +809,9 @@ function genMap(seed,loc,diff,opts){
   map.gen={x:genRoom.cx+1.5,z:genRoom.cz,k:genRoom.k,on:false,id:'gen',prog:0};
   const hatchRoom=pick(map.layers[0].rooms,rng);map.hatch={x:hatchRoom.cx-1.5,z:hatchRoom.cz-1,k:0,found:false};
   map.deepRoom=pick(deepRooms,rng);
+  /* ---- final physical check: every room must be walkable-to from the yard; otherwise regenerate deterministically ---- */
+  {const reach=reachFrom(map,0,map.spawn.x,map.spawn.z);let un=0;for(let k=0;k<L;k++)for(const r of map.layers[k].rooms){if(!reach.has(k*W*H+idx(r.x,r.z)))un++;}
+    if(un&&(opts.retry||0)<8)return genMap(seed+7919,loc,diff,Object.assign({},opts,{retry:(opts.retry||0)+1}));map.regen=opts.retry||0;}
   for(let i=0;i<4;i++){const a=i/4*TAU+rng();const it=rollItem(rng,1,true,lootMult*1.3);map.items.push({tpl:it.tpl,value:it.value,x:map.deepRoom.cx+Math.sin(a)*2.3,z:map.deepRoom.cz+Math.cos(a)*2.3,k:map.deepRoom.k,id:'nest'+i,room:map.deepRoom.id,rot:rng()*TAU});}
   return map;
 }
@@ -851,7 +872,7 @@ function findPath(map,k0,x0,z0,k1,x1,z1,opts){opts=opts||{};const W=map.W;const 
   const prev=new Map();prev.set(start,-1);const q=[start];let qi=0,found=false;
   while(qi<q.length&&qi<4000){const cur=q[qi++];if(cur===goal){found=true;break;}const k=Math.floor(cur/(W*map.H)),c=cur%(W*map.H),cx=c%W,cz=Math.floor(c/W);
     const lay=map.layers[k];const st=lay.stairAt[c];
-    const push=(kk,nx,nz)=>{if(!walkable(map,kk,nx,nz))return;const nk=key(kk,nz*W+nx);if(prev.has(nk))return;const nc=map.layers[kk].cells[nz*W+nx];
+    const push=(kk,nx,nz)=>{if(!walkable(map,kk,nx,nz))return;if(kk===k&&lay.blocked&&lay.blocked.has(edgeKeyG(cx,cz,nx,nz)))return;const nk=key(kk,nz*W+nx);if(prev.has(nk))return;const nc=map.layers[kk].cells[nz*W+nx];
       /* stair cells only enterable from their axis ends */
       const nst=map.layers[kk].stairAt[nz*W+nx];if(nst&&kk===k&&!st){const along=(nx-cx)*nst.dx+(nz-cz)*nst.dz;if(along===0)return;}
       if(st&&!nst&&kk===k){const along=(nx-cx)*st.dx+(nz-cz)*st.dz;if(along===0)return;}
@@ -868,7 +889,7 @@ function randomWalkCell(map,k,rng){const lay=map.layers[k];for(let i=0;i<200;i++
 /* reachable cell keys (k*W*H+cellIndex) from a world position, same movement rules as findPath */
 function reachFrom(map,k0,x0,z0){const W=map.W,H=map.H;const key=(k,c)=>k*W*H+c;const start=key(k0,Math.floor(z0/CELL)*W+Math.floor(x0/CELL));const seen=new Set([start]);const q=[start];let qi=0;
   while(qi<q.length){const cur=q[qi++];const k=Math.floor(cur/(W*H)),c=cur%(W*H),cx=c%W,cz=Math.floor(c/W);const lay=map.layers[k];const st=lay.stairAt[c];
-    const push=(kk,nx,nz)=>{if(!walkable(map,kk,nx,nz))return;const nk=key(kk,nz*W+nx);if(seen.has(nk))return;const nst=map.layers[kk].stairAt[nz*W+nx];if(nst&&kk===k&&!st){if((nx-cx)*nst.dx+(nz-cz)*nst.dz===0)return;}if(st&&!nst&&kk===k){if((nx-cx)*st.dx+(nz-cz)*st.dz===0)return;}seen.add(nk);q.push(nk);};
+    const push=(kk,nx,nz)=>{if(!walkable(map,kk,nx,nz))return;if(kk===k&&lay.blocked&&lay.blocked.has(edgeKeyG(cx,cz,nx,nz)))return;const nk=key(kk,nz*W+nx);if(seen.has(nk))return;const nst=map.layers[kk].stairAt[nz*W+nx];if(nst&&kk===k&&!st){if((nx-cx)*nst.dx+(nz-cz)*nst.dz===0)return;}if(st&&!nst&&kk===k){if((nx-cx)*st.dx+(nz-cz)*st.dz===0)return;}seen.add(nk);q.push(nk);};
     for(const d of DIRS)push(k,cx+d[0],cz+d[1]);
     if(st){const tk=st.k===k?k+1:k-1;if(tk>=0&&tk<map.L){for(const d of DIRS)push(tk,cx+d[0],cz+d[1]);push(tk,cx,cz);}}}
   return seen;}
@@ -1254,7 +1275,7 @@ function removeAvatar(id){const a=G.avatars[id];if(!a)return;G.scene.remove(a.ri
 function applyAvatarPacket(id,d){const a=G.avatars[id]||createAvatar(id,MP.players[id]||{name:'P'+id});a.net={p:new THREE.Vector3(d.p[0],d.p[1],d.p[2]),yaw:d.y,pitch:d.pt};a.k=d.l;a.crouch=!!d.cr;a.flash=!!d.fl;a.talk=!!d.tk;a.radio=!!d.rd;a.hold=d.h||null;a.loud=d.n||0;a.lookW=!!d.lw;a.speed=d.sp||0;a.inVan=!!d.iv;a.last=G.t;if(d.an)a.anchor=new THREE.Vector3(d.an[0],d.an[1],d.an[2]);if(d.hp!==undefined)a.hp=d.hp;if(d.dn!==undefined)a.downed=!!d.dn;if(d.dd!==undefined)a.dead=!!d.dd;}
 const _hp1=new THREE.Vector3(),_hp2=new THREE.Vector3();
 function updateAvatars(dt){for(const id in G.avatars){const a=G.avatars[id];if(a.net){a.pos.lerp(a.net.p,Math.min(1,dt*12));const dy=((a.net.yaw-a.yaw+Math.PI*3)%(Math.PI*2))-Math.PI;a.yaw+=dy*Math.min(1,dt*12);a.pitch=lerp(a.pitch,a.net.pitch,dt*10);}
-  const r=a.rig;r.root.position.copy(a.pos);r.root.rotation.y=a.yaw+Math.PI;r.root.visible=!a.dead;
+  const r=a.rig;r.root.position.copy(a.pos);r.root.rotation.y=a.yaw+Math.PI;r.root.visible=!a.dead;if(a.gone){if(!a.goneLab){a.goneLab=true;if(a.lab&&a.lab.material&&a.lab.material.map){a.lab.material.opacity=0.45;}}}else if(a.goneLab){a.goneLab=false;if(a.lab&&a.lab.material)a.lab.material.opacity=1;}
   const held=a.hold&&G.objById[a.hold];let an='idle';if(a.dead)an='dead';else if(a.downed)an='crawl';else if(held&&held.sz>=1)an=a.speed>0.4?'carry':'carry';else if(a.crouch)an='crouch';else if(a.speed>5)an='run';else if(a.speed>0.4)an='walk';
   if(a.emoteT>G.t){}else if(an!==a.anim){a.anim=an;r.play(an,0.2,an==='dead');}
   if(an==='crouch'&&a.speed<0.3)r.mixer.timeScale=0;else r.mixer.timeScale=1;
@@ -1631,7 +1652,7 @@ function procAnim(c,r,an,dt){const root=r.root;
   c.headQ.slerp(_pq3,1-Math.exp(-5*dt));hb.quaternion.premultiply(c.headQ);c.headApplied.copy(hb.quaternion);}
 /* ================= NETWORKING (PeerJS, host-authoritative) ================= */
 const MAXP=4;const PEER_OPT={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
-const MP={on:false,host:false,peer:null,code:'',conns:[],hostConn:null,myId:0,players:{},peerIds:{},nextId:1,name:'',busy:false,err:'',status:'',lobby:{contract:null,ready:{},started:false},snapT:0,inputT:0,ping:0};
+const MP={on:false,host:false,peer:null,code:'',conns:[],hostConn:null,myId:0,players:{},peerIds:{},nextId:1,name:'',busy:false,err:'',status:'',lobby:{contract:null,ready:{},started:false},snapT:0,inputT:0,ping:0,dropped:{},netLost:null,hostId:0,connecting:0,peerAlt:null};
 function mpHost(){return !MP.on||MP.host;}
 function mkCode(){const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++)s+=a[Math.floor(Math.random()*a.length)];return s;}
 function bcast(m,except){for(const c of MP.conns){if(c===except)continue;try{if(c.open)c.send(m);}catch(e){}}}
@@ -1641,27 +1662,53 @@ function sendAct(a){if(!MP.on||MP.host)return;a.t='act';sendHost(a);}
 function mpHostStart(){if(MP.on||MP.busy)return;if(!window.Peer){MP.err='Multiplayer library did not load.';renderCrew();return;}MP.busy=true;MP.err='';MP.status='Opening room…';renderCrew();
   const code=mkCode();const peer=new Peer('deadair-'+code,PEER_OPT);MP.peer=peer;hookCalls(peer);
   peer.on('open',()=>{MP.busy=false;MP.on=true;MP.host=true;MP.code=code;MP.myId=0;P.id=0;MP.players={0:{name:MP.name,cos:S.cos,ready:false,up:S.up}};MP.peerIds={0:'deadair-'+code};MP.status='';Aud.ui('ok');toast('📡 Room open · code '+code);renderCrew();updateRoomPill();});
-  peer.on('connection',conn=>{if(MP.conns.length>=MAXP-1||MP.lobby.started&&G.state!=='hub'){try{conn.on('open',()=>{conn.send({t:'full'});setTimeout(()=>conn.close(),300);});}catch(e){}return;}
-    const id=MP.nextId++;conn._pid=id;
-    conn.on('open',()=>{MP.conns.push(conn);});
-    conn.on('data',d=>hostMsg(id,d,conn));
-    conn.on('close',()=>{MP.conns=MP.conns.filter(c=>c!==conn);const nm=(MP.players[id]||{}).name||('P'+id);const pk=MP.peerIds[id];voiceDropPeer(pk);removeAvatar(id);delete MP.players[id];delete MP.peerIds[id];delete MP.lobby.ready[id];bcast({t:'roster',p:MP.players,ids:MP.peerIds});toast('👋 '+nm+' left');renderCrew();updateRoomPill();if(G.state==='play')hostDropInventory(id);});
-    conn.on('error',()=>{});});
+  peer.on('connection',hostAcceptConn);peer.on('disconnected',()=>{try{peer.reconnect();}catch(e){}});
   peer.on('error',e=>{MP.busy=false;MP.err=(e&&e.type==='unavailable-id')?'Code collision — try again.':'Could not open room ('+((e&&e.type)||'error')+').';try{peer.destroy();}catch(x){}MP.peer=null;MP.status='';renderCrew();});}
+function hostAcceptConn(conn){const inPlay=MP.lobby.started&&G.state!=='hub';const live=MP.conns.length;if(live>=MAXP-1&&!inPlay){try{conn.on('open',()=>{conn.send({t:'full'});setTimeout(()=>conn.close(),300);});}catch(e){}return;}
+  conn._pid=MP.nextId++;conn._prov=true;
+  conn.on('open',()=>{MP.conns.push(conn);if(inPlay){/* only rejoining players may enter a running game; give them 4 s to identify */setTimeout(()=>{if(conn._prov&&MP.conns.indexOf(conn)>=0){try{conn.send({t:'full'});conn.close();}catch(e){}}},4000);}});
+  conn.on('data',d=>hostMsg(conn._pid,d,conn));
+  conn.on('close',()=>hostConnClosed(conn));
+  conn.on('error',()=>{});}
+function hostConnClosed(conn){MP.conns=MP.conns.filter(c=>c!==conn);const id=conn._pid;if(conn._prov||!MP.players[id])return;const nm=(MP.players[id]||{}).name||('P'+id);
+  if(G.state==='play'&&!MP.players[id].gone){MP.players[id].gone=true;MP.dropped[id]=G.t;const a=G.avatars[id];if(a)a.gone=true;voiceDropPeer(MP.peerIds[id]);bcast({t:'roster',p:MP.players,ids:MP.peerIds});toast('📡 '+nm+' lost connection — holding their spot for 60 s');renderCrew();updateRoomPill();return;}
+  hostFinalizeDrop(id);}
+function hostFinalizeDrop(id){const nm=(MP.players[id]||{}).name||('P'+id);const pk=MP.peerIds[id];voiceDropPeer(pk);removeAvatar(id);delete MP.players[id];delete MP.peerIds[id];delete MP.lobby.ready[id];delete MP.dropped[id];bcast({t:'roster',p:MP.players,ids:MP.peerIds});toast('👋 '+nm+' left');renderCrew();updateRoomPill();if(G.state==='play')hostDropInventory(id);}
+function connectHost(peerId,rejoinId){const conn=MP.peer.connect(peerId,{reliable:true});let opened=false;
+  conn.on('open',()=>{opened=true;MP.hostConn=conn;MP.connecting=0;conn.send({t:'hi',n:MP.name,cos:S.cos,up:S.up,pk:MP.peer.id,rejoin:rejoinId});});
+  conn.on('data',clientMsg);conn.on('close',()=>{if(MP.hostConn===conn)hostLost();});conn.on('error',()=>{});return conn;}
+function hostLost(){if(!MP.on||MP.host)return;if(G.state!=='play'){toast('❌ Host closed the room');mpLeave(true);return;}if(MP.netLost)return;MP.netLost={t:G.t,phase:'reconnect',last:-9,target:null};sysMsg('📡 Connection to the host lost — reconnecting…','err',999);}
+function netRecoverTick(){const L=MP.netLost;if(!L||MP.host)return;const el=G.t-L.t;
+  if(L.phase==='reconnect'){if(el>8){L.phase='migrate';const ids=Object.keys(MP.players).map(Number).filter(i=>i!==MP.hostId&&!(MP.players[i]||{}).gone).sort((a,b)=>a-b);const cand=ids[0];L.cand=cand;if(cand===undefined||cand===P.id){becomeHost();return;}sysMsg('📡 Host is gone — '+nameOf(cand)+' is taking over. Reconnecting…','err',999);}
+    else if(G.t-L.last>2.5){L.last=G.t;sysMsg('📡 Connection to the host lost — reconnecting ('+Math.ceil(8-el)+' s)…','err',999);tryConnect(MP.peerIds[MP.hostId]||('deadair-'+MP.code),P.id);}return;}
+  if(L.phase==='migrate'){if(el>70){sysMsg('❌ Could not recover the session.','err',6);MP.netLost=null;mpLeave();return;}if(G.t-L.last>2.5){L.last=G.t;tryConnect('deadair-'+MP.code+'-m'+L.cand,P.id);}}}
+function tryConnect(peerId,rejoinId){if(!MP.peer)return;try{if(MP.peer.disconnected&&!MP.peer.destroyed){MP.peer.reconnect();return;}}catch(e){}try{connectHost(peerId,rejoinId);}catch(e){}}
+function becomeHost(){const L=MP.netLost;MP.netLost=null;const oldHost=MP.hostId;MP.host=true;MP.hostId=P.id;MP.hostConn=null;MP.conns=[];MP.snapT=0;MP.dropped={};MP.nextId=Math.max(P.id,...Object.keys(MP.players).map(Number).filter(n=>isFinite(n)))+1;
+  removeAvatar(oldHost);for(const o of G.objs){if(o.held===oldHost){o.held=null;o.mesh.visible=true;o.sleep=false;}o.holders=o.holders.filter(h=>h!==oldHost);o.net=null;}delete MP.players[oldHost];delete MP.peerIds[oldHost];
+  for(const c of G.creatures){c.net=null;c.path=null;}for(const id in MP.players){if(+id!==P.id){MP.players[id].gone=true;MP.dropped[id]=G.t;const a=G.avatars[id];if(a)a.gone=true;}}
+  const old=MP.peer;const mp=new Peer('deadair-'+MP.code+'-m'+P.id,PEER_OPT);MP.peer=mp;hookCalls(mp);
+  mp.on('open',()=>{MP.peerIds[P.id]=mp.id;sysMsg('📡 You are now the host. Waiting for the others to reconnect…','warn',8);toast('📡 You are now the host');updateRoomPill();renderCrew&&renderCrew();setTimeout(claimRoomId,4000);setTimeout(()=>{try{old.destroy();}catch(e){}},6000);});
+  mp.on('connection',hostAcceptConn);mp.on('disconnected',()=>{try{mp.reconnect();}catch(e){}});mp.on('error',e=>{if(e&&e.type==='unavailable-id')setTimeout(becomeHost,3000);});}
+function claimRoomId(){if(!MP.on||!MP.host||MP.peerAlt)return;try{const p2=new Peer('deadair-'+MP.code,PEER_OPT);p2.on('open',()=>{MP.peerAlt=p2;hookCalls(p2);p2.on('connection',hostAcceptConn);p2.on('disconnected',()=>{try{p2.reconnect();}catch(e){}});});p2.on('error',e=>{try{p2.destroy();}catch(x){}if(MP.on&&MP.host)setTimeout(claimRoomId,15000);});}catch(e){}}
 function mpJoin(code){if(MP.on||MP.busy)return;code=(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4);if(code.length!==4){MP.err='Enter the 4-character room code.';renderCrew();return;}if(!window.Peer){MP.err='Multiplayer library did not load.';renderCrew();return;}
   MP.busy=true;MP.err='';MP.status='Connecting to '+code+'…';renderCrew();const peer=new Peer(PEER_OPT);MP.peer=peer;hookCalls(peer);let done=false;
-  peer.on('open',()=>{const conn=peer.connect('deadair-'+code,{reliable:true});MP.hostConn=conn;
-    conn.on('open',()=>{done=true;MP.busy=false;MP.on=true;MP.host=false;MP.code=code;conn.send({t:'hi',n:MP.name,cos:S.cos,up:S.up,pk:peer.id});MP.status='Joining…';renderCrew();updateRoomPill();});
-    conn.on('data',clientMsg);conn.on('close',()=>{if(MP.on&&!MP.host){toast('❌ Host closed the room');mpLeave(true);}});conn.on('error',()=>{});
-    setTimeout(()=>{if(done)return;MP.busy=false;MP.err='No room found with code '+code+'.';MP.status='';try{peer.destroy();}catch(e){}MP.peer=null;MP.hostConn=null;renderCrew();},9000);});
+  peer.on('disconnected',()=>{try{peer.reconnect();}catch(e){}});
+  peer.on('open',()=>{MP.code=code;MP.hostId=0;const conn=connectHost('deadair-'+code,undefined);MP.hostConn=conn;
+    conn.on('open',()=>{done=true;MP.busy=false;MP.on=true;MP.host=false;MP.status='Joining…';renderCrew();updateRoomPill();});
+    let alt=0;const giveUp=()=>{MP.busy=false;MP.err='No room found with code '+code+'.';MP.status='';try{peer.destroy();}catch(e){}MP.peer=null;MP.hostConn=null;renderCrew();};
+    const tryAlt=()=>{if(done)return;alt++;if(alt>3){giveUp();return;}MP.status='Looking for the room ('+alt+')…';renderCrew();const c2=connectHost('deadair-'+code+'-m'+alt,undefined);MP.hostConn=c2;c2.on('open',()=>{done=true;MP.busy=false;MP.on=true;MP.host=false;MP.status='Joining…';renderCrew();updateRoomPill();});setTimeout(tryAlt,6000);};
+    setTimeout(tryAlt,9000);});
   peer.on('error',e=>{if(done)return;MP.busy=false;MP.err='Could not connect ('+((e&&e.type)||'error')+').';MP.status='';try{peer.destroy();}catch(x){}MP.peer=null;renderCrew();});}
-function mpLeave(silent){if(MP.host)bcast({t:'bye'});voiceStop();MP.conns.forEach(c=>{try{c.close();}catch(e){}});try{if(MP.peer)MP.peer.destroy();}catch(e){}MP.on=false;MP.host=false;MP.peer=null;MP.hostConn=null;MP.conns=[];MP.code='';MP.players={};MP.peerIds={};MP.nextId=1;MP.myId=0;P.id=0;MP.lobby={contract:null,ready:{},started:false};for(const id in G.avatars)removeAvatar(id);updateRoomPill();if(G.state==='play'&&!silent){finishMission('disconnect');}if(G.state==='hub')renderCrew();}
+function mpLeave(silent){MP.netLost=null;if(MP.host)bcast({t:'bye'});voiceStop();try{if(MP.peerAlt)MP.peerAlt.destroy();}catch(e){}MP.peerAlt=null;MP.dropped={};MP.hostId=0;MP.conns.forEach(c=>{try{c.close();}catch(e){}});try{if(MP.peer)MP.peer.destroy();}catch(e){}MP.on=false;MP.host=false;MP.peer=null;MP.hostConn=null;MP.conns=[];MP.code='';MP.players={};MP.peerIds={};MP.nextId=1;MP.myId=0;P.id=0;MP.lobby={contract:null,ready:{},started:false};for(const id in G.avatars)removeAvatar(id);updateRoomPill();if(G.state==='play'&&!silent){finishMission('disconnect');}if(G.state==='hub')renderCrew();}
 function updateRoomPill(){const el=$('roomPill');if(!MP.on){el.style.display='none';return;}el.style.display='inline-block';el.textContent=(MP.host?'HOSTING ':'IN ROOM ')+MP.code+' · '+Object.keys(MP.players).length+'/4';}
 /* ---- host message handling ---- */
 function hostMsg(id,d,conn){if(!d||!d.t)return;
   switch(d.t){
-    case 'hi':MP.players[id]={name:(d.n||'P'+id).slice(0,16),cos:d.cos||{},ready:false,up:d.up||{}};MP.peerIds[id]=d.pk;conn.send({t:'welcome',id,p:MP.players,ids:MP.peerIds,lobby:MP.lobby,state:G.state});bcast({t:'roster',p:MP.players,ids:MP.peerIds},conn);toast('👋 '+MP.players[id].name+' joined');renderCrew();updateRoomPill();if(VOICE.on)callPeer(d.pk);
-      if(G.state==='play'){/* late join: send mission */conn.send({t:'start',seed:G.mission.seed,contract:G.mission.contract,late:true,stage:G.stage,time:G.mission.time});}break;
+    case 'hi':{conn._prov=false;const rj=d.rejoin;const taken=rj!==undefined&&MP.conns.some(c=>c!==conn&&c._pid===rj);
+      if(rj!==undefined&&MP.players[rj]&&!taken){id=rj;conn._pid=id;MP.players[id].gone=false;delete MP.dropped[id];MP.peerIds[id]=d.pk;const a=G.avatars[id];if(a)a.gone=false;conn.send({t:'welcome',id,p:MP.players,ids:MP.peerIds,lobby:MP.lobby,state:G.state,rejoin:true,hostId:P.id});bcast({t:'roster',p:MP.players,ids:MP.peerIds},conn);toast('📡 '+MP.players[id].name+' reconnected');renderCrew();updateRoomPill();if(VOICE.on)callPeer(d.pk);break;}
+      if(G.state==='play'&&!MP.lobby.lateOk&&Object.keys(MP.players).length>=MAXP){conn.send({t:'full'});setTimeout(()=>{try{conn.close();}catch(e){}},300);break;}
+      MP.players[id]={name:(d.n||'P'+id).slice(0,16),cos:d.cos||{},ready:false,up:d.up||{}};MP.peerIds[id]=d.pk;conn.send({t:'welcome',id,p:MP.players,ids:MP.peerIds,lobby:MP.lobby,state:G.state,hostId:P.id});bcast({t:'roster',p:MP.players,ids:MP.peerIds},conn);toast('👋 '+MP.players[id].name+' joined');renderCrew();updateRoomPill();if(VOICE.on)callPeer(d.pk);
+      if(G.state==='play'){/* late join: send mission */conn.send({t:'start',seed:G.mission.seed,contract:G.mission.contract,late:true,stage:G.stage,time:G.mission.time});}break;}
     case 'ready':MP.lobby.ready[id]=!!d.v;bcast({t:'lobby',l:MP.lobby});renderCrew();break;
     case 'chat':{const m={t:'chat',n:nameOf(id),s:String(d.s||'').slice(0,120)};bcast(m);chatLine(m.n,m.s);break;}
     case 'input':{applyAvatarPacket(id,d);if(d.hp!==undefined&&MP.players[id]){MP.players[id].hp=d.hp;}break;}
@@ -1704,7 +1751,7 @@ function doPowerRemote(){const g=G.map.gen;g.on=true;if(G.map.exit.locked){G.map
 /* ---- client message handling ---- */
 function clientMsg(d){if(!d||!d.t)return;
   switch(d.t){
-    case 'welcome':MP.myId=d.id;P.id=d.id;MP.players=d.p;MP.peerIds=d.ids;MP.lobby=d.lobby;MP.status='';renderCrew();updateRoomPill();toast('✅ Joined room '+MP.code);if(VOICE.on)callEveryone();break;
+    case 'welcome':MP.myId=d.id;P.id=d.id;MP.players=d.p;MP.peerIds=d.ids;MP.lobby=d.lobby;MP.status='';MP.hostId=d.hostId||0;renderCrew();updateRoomPill();if(d.rejoin){MP.netLost=null;sysMsg('📡 Reconnected.','warn',4);}else toast('✅ Joined room '+MP.code);if(VOICE.on)callEveryone();break;
     case 'roster':MP.players=d.p;MP.peerIds=d.ids;if(VOICE.on)callEveryone();renderCrew();updateRoomPill();break;
     case 'lobby':MP.lobby=d.l;renderCrew();break;
     case 'full':MP.err='Room is full or in progress.';mpLeave(true);renderCrew();break;
@@ -1769,7 +1816,7 @@ function applySnapshot(d){for(const id in d.pl){if(+id===P.id)continue;applyAvat
   const off=new Set(d.lt.map(s=>s.replace('!','')));const em=new Set(d.lt.filter(s=>s.endsWith('!')).map(s=>s.replace('!','')));for(const l of G.lights){l.on=!off.has(l.id);l.emerg=em.has(l.id);}
   if(d.st!==G.stage)setStage(d.st);G.mission.time=d.tm;G.mission.departT=d.dep;G.gravity=d.gr;if(d.lo&&G.fx.lightsOut<=0)G.fx.lightsOut=5;G.map.exit.locked=!!d.ex[0];G.map.gen.on=!!d.ex[1];G.mission.valueBoost=d.vb;}
 function clientInput(){const o=G.objById[P.hands];const m={t:'input',p:[+P.pos.x.toFixed(2),+P.pos.y.toFixed(2),+P.pos.z.toFixed(2)],y:+P.yaw.toFixed(3),pt:+P.pitch.toFixed(2),l:P.k,cr:P.crouch?1:0,fl:(P.flash&&P.batt>0)?1:0,tk:P.talk?1:0,rd:P.radio.on?1:0,h:P.hands,n:+P.lastNoise.toFixed(2),sp:+Math.hypot(P.vel.x,P.vel.z).toFixed(1),hp:Math.round(P.hp),dn:P.downed?1:0,dd:P.dead?1:0,lw:P.lookW?1:0,iv:P.inVan?1:0};if(o&&o.holders.length>=2&&o.anchor)m.an=[+o.anchor.x.toFixed(2),+o.anchor.y.toFixed(2),+o.anchor.z.toFixed(2)];sendHost(m);}
-function netTick(dt){if(!MP.on||G.state!=='play')return;if(MP.host){MP.snapT+=dt;if(MP.snapT>=0.1){MP.snapT=0;bcast(hostSnapshot());}}else{MP.inputT+=dt;if(MP.inputT>=0.066){MP.inputT=0;clientInput();}}P.lastNoise*=Math.pow(0.15,dt);}
+function netTick(dt){if(!MP.on||G.state!=='play')return;if(MP.host){MP.snapT+=dt;if(MP.snapT>=0.1){MP.snapT=0;bcast(hostSnapshot());}for(const id in MP.dropped){if(G.t-MP.dropped[id]>60)hostFinalizeDrop(+id);}}else{if(MP.netLost){netRecoverTick();}else{MP.inputT+=dt;if(MP.inputT>=0.066){MP.inputT=0;clientInput();}}}P.lastNoise*=Math.pow(0.15,dt);}
 /* ================= VOICE (proximity + radio) ================= */
 const VOICE={on:false,muted:false,stream:null,calls:{},remotes:{},an:null,lvl:0,err:'',src:null,pttHeld:false,vaHold:0,clips:[],cap:null,capBuf:null,capPos:0,capHot:0,static:null};
 function voiceSupported(){return !!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);}
