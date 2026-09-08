@@ -101,6 +101,11 @@ body.scan:before{content:"";position:fixed;inset:0;pointer-events:none;backgroun
 #tTop button{width:46px;height:36px;font-size:14px}
 body.touch #hudHints{display:none}
 #dbgBanner{position:fixed;left:50%;top:6px;transform:translateX(-50%);background:#b32020;color:#fff;font-size:12px;padding:5px 14px;z-index:60;display:none;letter-spacing:.08em;border-radius:4px;font-weight:600}
+#ctrlCard{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(760px,92vw);max-height:86vh;overflow:auto;background:rgba(8,10,12,.94);border:1px solid var(--amber);border-radius:6px;padding:18px 24px;z-index:46;display:none;font-size:13px;line-height:1.9;pointer-events:none}
+#ctrlCard h3{margin:0 0 6px;color:var(--amber);letter-spacing:.15em}
+#ctrlCard .g{display:grid;grid-template-columns:1fr 1fr;gap:2px 28px}
+#crCard{position:fixed;left:50%;top:120px;transform:translateX(-50%);width:min(560px,90vw);background:rgba(20,8,8,.92);border:1px solid #e04040;border-radius:6px;padding:12px 18px;z-index:44;display:none;pointer-events:none;text-align:left}
+#crCard b{font-size:18px;letter-spacing:.1em;color:#ffb0b0}#crCard .d{font-size:13px;color:#ffd9d9;margin-top:4px}#crCard .t{font-size:10px;letter-spacing:.2em;color:#e04040}
 #lockHint{position:fixed;left:50%;top:36%;transform:translateX(-50%);padding:14px 28px;background:rgba(0,0,0,.72);border:1px solid var(--amber);color:var(--amber);letter-spacing:.2em;font-size:16px;z-index:4;display:none;pointer-events:none;text-align:center;border-radius:4px}
 #compass{position:absolute;left:50%;top:58px;transform:translateX(-50%);font-size:11px;letter-spacing:.15em;color:var(--dim);background:rgba(0,0,0,.35);padding:2px 10px;border-radius:4px;white-space:nowrap}
 #compass b{display:inline-block;color:var(--amber);transition:transform .15s}
@@ -212,14 +217,14 @@ body.touch #hudHints{display:none}
   <div id="xh"></div>
   <div id="prompt" style="display:none"></div>
   <div id="hint"></div>
-  <div id="objv"><div class="t">OBJECTIVE</div><div id="objMain">—</div><div class="opt" id="objOpt"></div></div>
+  <div id="objv"><div class="t">OBJECTIVE</div><div id="objMain">—</div><div id="objHint" class="dim" style="font-size:11px;margin:2px 0 4px;color:#ffd27a"></div><div class="opt" id="objOpt"></div></div>
   <div id="stage"><span id="stageN">STAGE 1</span><b id="stageT">EXPLORATION</b></div>
   <div id="compass"><b id="cArrow">➤</b> <span id="cTxt"></span></div>
   <div id="sysMsg"></div>
   <div id="touchUI">
     <div id="tLook"></div>
     <div id="tJoy"><div id="tKnob"></div></div>
-    <div id="tTop"><button data-k="Escape">☰</button><button data-k="KeyM">MAP</button><button data-k="Tab">BAG</button><button data-k="KeyP">CAM</button><button data-k="FS">⛶</button></div>
+    <div id="tTop"><button data-k="Escape">☰</button><button data-k="KeyM">MAP</button><button data-k="Tab">BAG</button><button data-k="KeyP">CAM</button><button data-k="KeyO">OBJ</button><button data-k="KeyI" data-m="hold">?</button><button data-k="FS">⛶</button></div>
     <div id="tBtns">
       <button data-k="KeyQ">PING</button><button data-k="KeyR">RADIO</button><button data-k="KeyV">TALK</button><button data-k="KeyF">LIGHT</button>
       <button data-k="M0">THROW</button><button data-k="M2">STASH</button><button data-k="ShiftLeft" data-m="toggle">RUN</button><button data-k="ControlLeft" data-m="toggle">CROUCH</button>
@@ -227,6 +232,19 @@ body.touch #hudHints{display:none}
     </div>
   </div>
   <div id="dbgBanner">DEBUG MODE: mouse capture is disabled because the address ends in #debug-nolock. Remove that from the URL and reload to play normally.</div>
+  <div id="ctrlCard"><h3>CONTROLS</h3><div class="g">
+    <div><span class="kb">WASD</span> move · <span class="kb">Shift</span> sprint · <span class="kb">Ctrl</span> / <span class="kb">C</span> crouch · <span class="kb">Space</span> jump</div>
+    <div><span class="kb">Mouse</span> look · <span class="kb">E</span> use / grab · hold <span class="kb">E</span> on generators, terminals, downed friends</div>
+    <div><span class="kb">Left click</span> hold + release: throw what you hold · <span class="kb">Right click</span> pocket it</div>
+    <div><span class="kb">1-7</span> take from a pocket, or pocket what you hold into an empty slot · <span class="kb">Tab</span> inventory</div>
+    <div><span class="kb">F</span> flashlight (middle click too) · <span class="kb">G</span> flare (if you have any)</div>
+    <div><span class="kb">Q</span> ping what you look at · hold <span class="kb">Q</span> + <span class="kb">1-7</span> ping types · <span class="kb">Y</span> wave</div>
+    <div><span class="kb">V</span> hold to talk (proximity) · <span class="kb">R</span> hold: radio, works between floors · <span class="kb">N</span> mute</div>
+    <div><span class="kb">M</span> map · <span class="kb">O</span> show the objective · <span class="kb">T</span> text chat</div>
+    <div><span class="kb">P</span> third-person camera · <span class="kb">J</span> unstick · <span class="kb">Esc</span> pause and settings</div>
+    <div><span class="kb">I</span> hold to show this card · <span class="kb">H</span> use a medkit · the compass at the top always points to the van</div>
+  </div><div class="dim" style="margin-top:10px;font-size:11px">Creatures hear your microphone. The van opens after the first minute. Loot only counts once it is inside the van.</div></div>
+  <div id="crCard"><div class="t">FIRST CONTACT</div><b id="crName"></b><div class="d" id="crDesc"></div></div>
   <div id="lockHint">🖱 CLICK THE GAME TO CAPTURE YOUR MOUSE<br><span class="dim" style="font-size:11px;letter-spacing:.1em">Esc releases it · if capture keeps failing the game switches to free-look</span></div>
   <div id="team"></div>
   <div id="van"><span>IN THE VAN</span><b id="vanVal">0 cr</b><span id="vanReady"></span></div>
@@ -302,7 +320,7 @@ const DEF_SAVE={credits:1500,baseLv:1,missions:0,extracts:0,deaths:0,best:0,tota
   ach:{},stats:{doors:0,thrown:0,broken:0,screams:0,revives:0,docs:0,encounters:{},lost:0,abandoned:0,pings:0,distance:0,time:0,creaturesMet:{}},
   trophies:[],moments:[],lore:{},seenEvents:{},daily:{},tutorialDone:false,
   set:{sens:0.55,smooth:0.35,fov:80,vol:0.8,music:0.6,voiceVol:1,voiceMode:'va',micSens:0.06,micDetect:true,shake:1,flash:true,subs:true,bright:1,gfx:3,invertY:false,ptt:'KeyV',crouchToggle:false,textSize:1,colorblind:false,blur:true,vsync:true,showTips:true}};
-let S=loadSave();if(S.set.smooth===undefined)S.set.smooth=0.35;if(S.set.tp===undefined)S.set.tp=false;if(S.set.touch===undefined)S.set.touch=!!(navigator.maxTouchPoints>0&&window.matchMedia&&matchMedia('(pointer:coarse)').matches);if(S.set.gfx===2&&!S.set.gfxMig){S.set.gfx=3;S.set.gfxMig=true;}
+let S=loadSave();if(S.set.smooth===undefined)S.set.smooth=0.35;if(S.set.tp===undefined)S.set.tp=false;if(!S.hints)S.hints={};if(!S.stats.seenKinds)S.stats.seenKinds={};if(S.set.touch===undefined)S.set.touch=!!(navigator.maxTouchPoints>0&&window.matchMedia&&matchMedia('(pointer:coarse)').matches);if(S.set.gfx===2&&!S.set.gfxMig){S.set.gfx=3;S.set.gfxMig=true;}
 function loadSave(){try{const d=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');if(!d)return JSON.parse(JSON.stringify(DEF_SAVE));const m=JSON.parse(JSON.stringify(DEF_SAVE));deepMerge(m,d);return m;}catch(e){return JSON.parse(JSON.stringify(DEF_SAVE));}}
 function deepMerge(t,s){for(const k in s){if(s[k]&&typeof s[k]==='object'&&!Array.isArray(s[k])&&t[k]&&typeof t[k]==='object'){deepMerge(t[k],s[k]);}else t[k]=s[k];}}
 let saveT=0;
@@ -1487,7 +1505,7 @@ function updateCreaturesVisual(dt){for(const c of G.creatures){if(!mpHost()&&c.n
   /* ambient sound per kind */c.sfxT-=dt;if(c.sfxT<=0&&c.visible&&c.k===P.k){c.sfxT=3+Math.random()*6;const d=c.pos.distanceTo(P.pos);if(d<30){if(c.kind==='echo')Aud.creature('echo',c.pos,0.6);else if(c.kind==='lighteater')Aud.creature('lighteater',c.pos,0.5);else if(c.kind==='hound'&&c.state!=='chase')Aud.creature('hound',c.pos,0.3);else if(c.kind==='drifter')Aud.creature('drifter',c.pos,0.6);else if(c.kind==='crawler'&&c.state==='stalk')Aud.creature('scratch',c.pos,0.5);else if(c.kind==='mourner'&&c.state==='kneel')Aud.creature('sob',c.pos,0.7);else if(c.kind==='hanger')Aud.creature('hanger',c.pos,0.6);else if(c.kind==='collector')Aud.creature('collector',c.pos,0.4);else if(c.kind==='sleeper'&&c.state==='sleep')Aud.creature('sleeper_breath',c.pos,0.8);else if(c.kind==='swarm')Aud.creature('swarm',c.pos,0.6);else if(c.kind==='twin'&&c.state==='approach')Aud.creature('twin',c.pos,0.5);else if(c.kind==='mimic'&&c.state!=='hidden')Aud.creature('mimic',c.pos,0.5);if(S.set.subs&&d<18)subtitle('['+CREATURES[c.kind].n+' nearby]');}}
   /* stack fake prompt shadow */
   /* window look detection (local) */if(c.kind==='window'){if(c.visible&&c.target===P.id){const to=_tmpV.copy(c.pos).sub(G.cam.position);to.y+=1.4;const d=to.length();to.normalize();const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(G.cam.quaternion);const look=fwd.dot(to)>0.9&&losClear(G.map,P.k,P.pos.x,P.pos.z,c.pos.x,c.pos.z);P.lookW=look;if(look&&Math.random()<dt*2)Aud.creature('window',c.pos,0.5);}else P.lookW=false;}
-  /* first sighting stat */if(c.visible&&c.k===P.k&&!G.mission.seenKinds[c.kind]){const d=c.pos.distanceTo(P.pos);if(d<16&&losClear(G.map,P.k,P.pos.x,P.pos.z,c.pos.x,c.pos.z)){G.mission.seenKinds[c.kind]=G.t;if(CREATURES[c.kind].major&&!G.mission.firstMajor)G.mission.firstMajor=G.t;if(S.set.subs)subtitle('['+CREATURES[c.kind].n+']');Aud.musicSet(Math.max(Aud.music.target||0,2));if(c.kind==='echo'||c.kind==='warden'||c.kind==='window')ach('heard');}}
+  /* first sighting stat */if(c.visible&&c.k===P.k&&!G.mission.seenKinds[c.kind]){const d=c.pos.distanceTo(P.pos);if(d<16&&losClear(G.map,P.k,P.pos.x,P.pos.z,c.pos.x,c.pos.z)){G.mission.seenKinds[c.kind]=G.t;if(CREATURES[c.kind].major&&!G.mission.firstMajor)G.mission.firstMajor=G.t;if(!S.stats.seenKinds[c.kind]){S.stats.seenKinds[c.kind]=true;save();creatureCard(c.kind);}else if(S.set.subs)subtitle('['+CREATURES[c.kind].n+']');Aud.musicSet(Math.max(Aud.music.target||0,2));if(c.kind==='echo'||c.kind==='warden'||c.kind==='window')ach('heard');}}
 }}
 function creatureThreat(){/* music level from creature states */let lvl=0;for(const c of G.creatures){if(!c.visible||c.k!==P.k)continue;const d=c.pos.distanceTo(P.pos);if(['hunt','chase','pounce','attack','stalk','wake','scream','drop','grab'].indexOf(c.state)>=0&&(c.target===P.id||c.victim===P.id||d<10))lvl=Math.max(lvl,3);else if(d<12)lvl=Math.max(lvl,2);else if(d<25)lvl=Math.max(lvl,1);}return lvl;}
 /* ================= LIGHTS ================= */
@@ -1556,7 +1574,7 @@ function setStage(st){G.stage=st;const names=['','EXPLORATION','ANOMALIES','ACTI
   if(st===7){G.mission.departT=90;Aud.alarm();toast('🚐 THE VAN LEAVES IN 90 SECONDS','big');}
   if(st>=6)Aud.musicSet(Math.max(Aud.music.target||0,4));
 }
-function objectiveProgress(id){const o=G.mission.objective;if(o.id!==id||o.done)return;o.done=true;toast('✅ OBJECTIVE COMPLETE: '+o.text,'big');Aud.ui('ok');updateObjHud();if(mpHost()&&MP.on)bcast({t:'ev',k:'objdone'});}
+function objectiveProgress(id){if(typeof showObjMarker==='function')setTimeout(()=>showObjMarker(6),300);const o=G.mission.objective;if(o.id!==id||o.done)return;o.done=true;toast('✅ OBJECTIVE COMPLETE: '+o.text,'big');Aud.ui('ok');updateObjHud();if(mpHost()&&MP.on)bcast({t:'ev',k:'objdone'});}
 function checkObjectives(){const o=G.mission.objective;if(o.done)return;if(o.id==='quota'){if(vanValue()>=o.quota)objectiveProgress('quota');}
   else if(o.id==='researcher'){const t=G.objById.objtag;if(t&&t.inVan)objectiveProgress('researcher');}
   else if(o.id==='drive'){const t=G.objById.drive_obj;if(t&&t.inVan)objectiveProgress('drive');}
@@ -1836,6 +1854,7 @@ function updateHud(dt){hudT+=dt;if(P.hurtT>0)P.hurtT-=dt;if(hudT<0.1)return;hudT
   const n=P.lastNoise;$('noiseT').textContent=n>0.6?'LOUD':n>0.25?'noisy':n>0.08?'low':'quiet';$('noiseT').style.color=n>0.6?'#ff4d4d':n>0.25?'#ffb347':'#fff';
   if(subT<G.t)$('sub').textContent='';
   {const m=G.map;const dx=m.van.x-P.pos.x,dz=(m.van.z-2)-P.pos.z;const d=Math.hypot(dx,dz);const fx=-Math.sin(P.yaw),fz=-Math.cos(P.yaw),rx=Math.cos(P.yaw),rz=-Math.sin(P.yaw);const ang=Math.atan2(dx*rx+dz*rz,dx*fx+dz*fz);$('cArrow').style.transform='rotate('+(ang*180/Math.PI-90)+'deg)';$('lockHint').style.display=(!G.paused&&!NOLOCK&&!G.fallbackLook&&!TOUCH.on&&!P.dead&&document.pointerLockElement!==$('gl'))?'block':'none';$('touchUI').style.display=(TOUCH.on&&!G.paused&&!P.dead)?'block':'none';$('cTxt').textContent='VAN '+Math.round(d)+'m'+(P.k>0?' · '+P.k+' floor'+(P.k>1?'s':'')+' up':'')+(vanLocked()?' · locked':'');}
+  updateObjMarker();contextHints();
   const t=lookTarget();const pr=$('prompt');if(t&&!(K.KeyE&&P.useT>0)){pr.style.display='block';pr.textContent='[E] '+t.label;$('xh').className=t.kind==='obj'?'grab':'';}else if(!(K.KeyE&&P.useT>0)){pr.style.display='none';$('xh').className='';}
   if(!G.mission.sandbox){const rem=Math.max(0,G.mission.total-G.mission.time);$('stageN').textContent='STAGE '+G.stage+' · '+(G.stage>=7?'VAN LEAVES '+Math.ceil(G.mission.departT)+'s':Math.floor(rem/60)+':'+String(Math.floor(rem%60)).padStart(2,'0'));}
   $('glitch').style.opacity=G.fx.glitch>0?Math.min(1,G.fx.glitch)*0.8:0;if(G.fx.glitch>0)G.fx.glitch-=0.1;
@@ -1973,7 +1992,7 @@ function startMission(contract,seed,late){const loc=LOCS.find(l=>l.id===contract
     if(!mpHost()&&$('cineDet'))$('cineDet').textContent='host is scanning…';
     if(late){M.time=late.time||0;setStage(late.stage||1);}
     for(const id in MP.players){if(+id!==P.id)createAvatar(+id,MP.players[id]);}
-    setTimeout(()=>{showScreen(null);$('hud').classList.add('on');G.state='play';M.startT=G.t;Aud.amb(loc.amb);Aud.musicSet(0);updateInv();updateObjHud();updateVitals();$('downed').style.display='none';document.body.style.filter='';requestLock();
+    setTimeout(()=>{showScreen(null);$('hud').classList.add('on');G.state='play';M.startT=G.t;showObjMarker(8);setTimeout(()=>hintOnce('objective','Press O any time to see where the objective is. Hold I for the controls card.'),3000);Aud.amb(loc.amb);Aud.musicSet(0);updateInv();updateObjHud();updateVitals();$('downed').style.display='none';document.body.style.filter='';requestLock();
       toast('🚐 Doors open. '+(M.tutorial?'Training begins.':'Get in, get rich, get out.'),'big');if(M.weekly){const w=WEEKLY.find(x=>x.id===M.weekly);toast('📆 WEEKLY ANOMALY: '+w.n+' — '+w.d);}
       if(M.tutorial)tutorialStart();else if(S.set.showTips)setTimeout(()=>toast('💡 The van stays sealed for the first 3 minutes. Go find loot, then bring it back.'),4000);
       S.missions+=1;save();},late?300:2500);},2200);}
@@ -2060,10 +2079,12 @@ addEventListener('keydown',e=>{const tag=(e.target.tagName||'').toLowerCase();if
     case 'KeyN':if(!e.repeat)voiceMute();break;
     case 'KeyY':if(!e.repeat)doEmote('wave');break;
     case 'KeyJ':if(!e.repeat)unstick();break;
+    case 'KeyO':if(!e.repeat){showObjMarker(6);Aud.ui('click');}break;
+    case 'KeyI':$('ctrlCard').style.display='block';break;
     case 'KeyP':if(!e.repeat){S.set.tp=!S.set.tp;save();Aud.ui('click');toast(S.set.tp?'🎥 Third-person camera (P to switch back)':'🎥 First-person camera');}break;
     case 'Digit1':case 'Digit2':case 'Digit3':case 'Digit4':case 'Digit5':case 'Digit6':case 'Digit7':{const n=+e.code.slice(5);if(K.KeyQ){qWheel=true;doPing(PING_TYPES[n-1]&&PING_TYPES[n-1].k);$('pingWheel').style.display='none';}else if(n<=7)takePocket(n-1);break;}
   }});
-addEventListener('keyup',e=>{K[e.code]=false;if(G.state!=='play')return;if(e.code==='KeyR')radioSet(false);if(e.code==='KeyV')VOICE.pttHeld=false;if(e.code==='KeyQ'){$('pingWheel').style.display='none';if(!qWheel&&!G.paused)doPing();}});
+addEventListener('keyup',e=>{K[e.code]=false;if(e.code==='KeyI')$('ctrlCard').style.display='none';if(G.state!=='play')return;if(e.code==='KeyR')radioSet(false);if(e.code==='KeyV')VOICE.pttHeld=false;if(e.code==='KeyQ'){$('pingWheel').style.display='none';if(!qWheel&&!G.paused)doPing();}});
 addEventListener('blur',()=>{for(const k in K)K[k]=false;VOICE.pttHeld=false;});
 const NOLOCK=location.hash.indexOf('nolock')>=0;if(NOLOCK){const b=document.getElementById('dbgBanner');if(b)b.style.display='block';}
 document.addEventListener('pointerlockchange',()=>{if(NOLOCK)return;if(document.pointerLockElement===$('gl')){G.lockFail=0;G.lockTry=false;G.fallbackLook=false;$('gl').style.cursor='';G.lockGrace=3;mouseDX=mouseDY=0;}if(document.pointerLockElement!==$('gl')&&G.state==='play'&&!G.paused){/* auto-pause when lock lost (esc) */togglePause(true);}});
@@ -2102,8 +2123,9 @@ function boot(){initRenderer();applySettings();initTouch();if(S.set.touch&&!S.se
   window.addEventListener('error',e=>{if(G.state==='play')onFrameError(e.error||e.message);});let ti=0;$('tips').textContent='TIP: '+TIPS[0];const tipIv=setInterval(()=>{ti=(ti+1)%TIPS.length;$('tips').textContent='TIP: '+TIPS[ti];},4500);MP.name=S.cos.name||('Recruit-'+Math.floor(Math.random()*90+10));
   const tag=document.querySelector('#title .tag');tag.textContent='Loading Blender assets… 0%';for(const b of ['bStart','bTutorial'])$(b).disabled=true;
   Aud.loadBank();Assets.load(()=>{tag.textContent='"We don\'t ask what it is. We ask what it\'s worth."';for(const b of ['bStart','bTutorial'])$(b).disabled=false;buildHubScene();G.state='title';loop(performance.now());},p=>{tag.textContent=Assets.err?Assets.err:'Loading Blender assets… '+Math.round(p*100)+'%';if(Assets.err)tag.className='tag red';});
-  $('bStart').onclick=()=>{Aud.init();Aud.ui('ok');enterHub();};
-  $('bTutorial').onclick=()=>{Aud.init();startMission({locId:'annex',diffId:'easy',objective:{id:'tutorial',text:'Complete orientation'},optionals:[],danger:1,expected:2000,mode:'standard',tutorial:true,layers:2,pay:500,seed:1234},1234);};
+  $('bStart').onclick=()=>{Aud.init();Aud.ui('ok');if(!S.tutorialDone&&!location.hash.includes('skiptut')){toast('First shift: orientation first. You can replay it from the title screen any time.','big');startTutorial();return;}enterHub();};
+  function startTutorial(){Aud.init();startMission({locId:'annex',diffId:'easy',objective:{id:'tutorial',text:'Complete orientation'},optionals:[],danger:1,expected:2000,mode:'standard',tutorial:true,layers:2,pay:500,seed:1234},1234);}
+$('bTutorial').onclick=()=>{startTutorial();};
   $('bTitleSettings').onclick=()=>{Aud.init();hubPane='settings';enterHub();};
   for(const b of $('hubNav').querySelectorAll('[data-pane]'))b.onclick=()=>{hubPane=b.dataset.pane;Aud.ui('click');renderHub();if(hubPane==='locker')refreshHubAvatar();};
   $('bToTitle').onclick=()=>{showScreen('title');G.state='title';};
@@ -2141,6 +2163,42 @@ window.addEventListener('mouseup',()=>{if(G.hub)G.hub.drag=null;});
 $('gl').addEventListener('touchstart',e=>{if(G.state==='hub'&&hubPane==='locker'&&G.hub){const t=e.touches[0];G.hub.drag={x:t.clientX,yaw:G.hub.av.root.rotation.y};}},{passive:true});
 $('gl').addEventListener('touchmove',e=>{if(G.state!=='hub'||!G.hub||!G.hub.drag)return;const t=e.touches[0];G.hub.dragYaw=G.hub.drag.yaw+(t.clientX-G.hub.drag.x)*0.012;G.hub.dragT=G.t;},{passive:true});
 $('gl').addEventListener('touchend',()=>{if(G.hub)G.hub.drag=null;});
+
+/* ---------- clarity pack: objective target, marker, hint line, creature cards, contextual hints ---------- */
+function floorName(k){return k===0?'ground floor':'floor B'+k;}
+function objTarget(){const M=G.mission;if(!M||!G.map)return null;const o=M.objective;const m=G.map;const van={x:m.van.x,z:m.van.z-2,k:0,label:'VAN',hint:'Bring it to the van (ground floor). The compass points there.'};
+  const carriedOrVan=(obj,what)=>{if(!obj)return null;if(obj.inVan)return null;if(obj.held===P.id)return {...van,hint:'You have '+what+'. Get it into the van.'};if(obj.held!==null)return {...van,hint:'A teammate has '+what+'. Cover them to the van.'};return {x:obj.p.x,z:obj.p.z,k:obj.k,label:what.toUpperCase(),hint:what[0].toUpperCase()+what.slice(1)+' is on the '+floorName(obj.k)+'. Pick it up with E, then carry it to the van.'};};
+  if(o.done)return {...van,hint:'Objective complete. Everyone to the van; loot only counts inside it.'};
+  switch(o.id){
+    case 'power':{const g=m.gen;if(!g)return null;if(g.on)return {...van,hint:'Power is on. Loot, then extract.'};return {x:g.x,z:g.z,k:g.k,label:'GENERATOR',hint:'The generator is on the '+floorName(g.k)+'. Hold E on it until the bar fills.'};}
+    case 'beacon':{const b=m.specials&&m.specials.beacon;if(!b)return null;return {x:b.x,z:b.z,k:b.k,label:'BEACON',hint:'The beacon is on the '+floorName(b.k)+'. Hold E on it to activate it.'};}
+    case 'drive':{const t=m.specials&&m.specials.terminal;const d=G.objById.drive_obj;if(d)return carriedOrVan(d,'the hard drive');if(!t)return null;return {x:t.x,z:t.z,k:t.k,label:'TERMINAL',hint:'The terminal is on the '+floorName(t.k)+'. Hold E to pull the drive, then carry it to the van.'};}
+    case 'researcher':{const t=G.objById.objtag;if(t)return carriedOrVan(t,'the tag');const r=m.deepRoom;return r?{x:r.cx,z:r.cz,k:r.k,label:'RESEARCHER',hint:'The researcher was last seen on the '+floorName(r.k)+'. Find the body and take the tag.'}:null;}
+    case 'artifact':{const a=G.objById.artifact;return carriedOrVan(a,'the artifact');}
+    case 'samples':{let best=null,bd=1e9,inVan=0;for(const ob of G.objs){if(ob.kind!=='item'||!ITEMS[ob.tpl]||!ITEMS[ob.tpl].sample)continue;if(ob.inVan){inVan++;continue;}if(ob.held!==null)continue;const d=dist2(ob.p.x,ob.p.z,P.pos.x,P.pos.z)+(ob.k!==P.k?400:0);if(d<bd){bd=d;best=ob;}}if(inVan>=3)return {...van,hint:'Samples secured. Extract.'};if(!best)return {...van,hint:'Samples in the van: '+inVan+' / 3. Carry the rest in.'};return {x:best.p.x,z:best.p.z,k:best.k,label:'SAMPLE',hint:'Samples in the van: '+inVan+' / 3. Nearest sample is on the '+floorName(best.k)+'.'};}
+    case 'quota':{const need=Math.max(0,o.quota-vanValue());const carry=(P.hands?1:0)+P.pockets.length;return {...van,hint:need<=0?'Quota met. Extract when ready.':fmt(need)+' cr still needed in the van. Grab valuables with E; '+(carry?'you are carrying '+carry+' item'+(carry>1?'s':'')+', bring them back.':'the deeper floors pay more.'),nomark:!carry};}
+    case 'tutorial':return null;}
+  return null;}
+let _objMark=null;
+function showObjMarker(sec){G.objMarkT=G.t+(sec||6);}
+function updateObjMarker(){const t=objTarget();const hint=$('objHint');if(hint){const txt=t?t.hint:'';if(hint.textContent!==txt)hint.textContent=txt;}
+  const show=G.objMarkT>G.t&&t&&!t.nomark&&!P.dead;if(!_objMark){const c=document.createElement('canvas');c.width=256;c.height=96;const x=c.getContext('2d');x.font='bold 40px Segoe UI, sans-serif';x.textAlign='center';x.fillStyle='#ffd27a';x.fillText('◎',128,44);x.font='bold 22px Segoe UI, sans-serif';x.fillText('OBJECTIVE',128,84);const tex=new THREE.CanvasTexture(c);_objMark=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false}));_objMark.scale.set(2.2,0.85,1);_objMark.renderOrder=999;_objMark.visible=false;}
+  if(show&&_objMark.parent!==G.scene)G.scene.add(_objMark);_objMark.visible=!!show;if(!show)return;
+  const rem=G.objMarkT-G.t;_objMark.position.set(t.x,layerY(t.k)+1.7+Math.sin(G.t*3)*0.08,t.z);_objMark.material.opacity=Math.min(1,rem);
+  const d=Math.round(Math.hypot(t.x-P.pos.x,t.z-P.pos.z));const fl=t.k-P.k;if(!G._objSub||G.t-G._objSub>0.5){G._objSub=G.t;subtitle(t.label+' · '+d+'m'+(fl?(' · '+Math.abs(fl)+' floor'+(Math.abs(fl)>1?'s':'')+(fl>0?' down':' up')):''));}}
+function creatureCard(kind){const c=CREATURES[kind];if(!c)return;$('crName').textContent=c.ic+' '+c.n;$('crDesc').textContent=c.d;const el=$('crCard');el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>{el.style.display='none';},8000);Aud.sting&&Aud.sting('scare');}
+function hintOnce(id,text){if(!S.hints)S.hints={};if(S.hints[id])return false;S.hints[id]=true;save();toast('💡 '+text,'big');return true;}
+function contextHints(){if(G.state!=='play'||G.paused||P.dead||!G.mission||G.mission.tutorial)return;G._hintT=(G._hintT||0)+1;if(G._hintT%25!==0)return;const M=G.mission;const since=G.t-(M.startT||0);
+  if(P.hands){const o=G.objById[P.hands];if(o&&canPocket(o))hintOnce('pocket','You can pocket that: right-click, or press an empty pocket number. Pocketed items are safe when you get grabbed.');}
+  if(vanLocked()&&(P.hands||P.pockets.length))hintOnce('vanlock','The van stays sealed for the first minute. Keep looting; the compass at the top always points back to it.');
+  if(P.batt<0.25)hintOnce('batt','Battery low. F switches the light off to save it. Spare batteries are sold in Requisitions.');
+  if(P.stamina<0.08)hintOnce('sprint','Out of breath. Sprinting is loud and creatures hear it. Crouch to move quietly.');
+  if(P.k!==0)hintOnce('stairs','Deeper floors pay more and have worse company. The compass shows how many floors up the van is.');
+  if(MP.on){let far=false,down=false;for(const id in G.avatars){const a=G.avatars[id];if(a.dead)continue;if(a.downed&&a.k===P.k&&a.pos.distanceTo(P.pos)<15)down=true;if(a.k!==P.k||a.pos.distanceTo(P.pos)>22)far=true;}
+    if(down)hintOnce('revive','A teammate is down. Hold E on them to get them back up.');
+    if(far&&since>45)hintOnce('radio','Teammates are far away. Hold R to talk on the radio; it works between floors, mostly.');
+    if(since>90)hintOnce('ping','Q pings whatever you are looking at. Teammates see it on their map and get a marker.');}
+  for(const c of G.creatures){if(c.k===P.k&&c.visible&&(c.state==='chase'||c.state==='hunt'||c.state==='lunge')&&c.pos.distanceTo(P.pos)<9){if(P.hands)hintOnce('throw','Hold left-click and release to throw what you hold. Most creatures flinch or let go when hit.');else hintOnce('flee','It is after you. Sprint to the van or break line of sight; doors slow most creatures.');break;}}}
 </script>
 </body>
 </html>
