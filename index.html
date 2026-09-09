@@ -509,7 +509,7 @@ const CREATURES={
  crawler:{n:'The Crawler',ic:'🕷',major:true,threat:3,d:'Lives in the vents. Hates crowds. Loves loners.'},
  lighteater:{n:'The Light Eater',ic:'🌑',major:true,threat:2,d:'Comes for the light. Turn it off. Good luck.'},
  window:{n:'The Man in the Window',ic:'🪟',major:true,threat:2,d:'Never attacks. Almost never.'},
- hound:{n:'Hollow Hound',ic:'🐕',major:false,threat:2,d:'Hunts by sound. Crouch. Stop. Wait.'},
+ hound:{n:'Hollow Hound',ic:'🐕',major:false,threat:2,d:'Hunts by sound. It bites, then backs off: that pause is your window. Light in its eyes makes it run. Throw something and it chases that instead of you.'},
  stack:{n:'The Stack',ic:'📦',major:false,threat:1,d:'Looks like loot. Is not loot.'},
  drifter:{n:'Drifters',ic:'🪼',major:false,threat:1,d:'Floating spores. Blind you on contact. Throw things at them.'},
  mourner:{n:'The Mourner',ic:'😭',major:false,threat:2,d:'Kneels and weeps. Keep your distance, or everything in the building hears about it.'},
@@ -1339,7 +1339,7 @@ function allPlayers(){const arr=[{id:P.id,pos:P.pos,k:P.k,flash:P.flash&&P.batt>
 function alivePlayers(){return allPlayers().filter(p=>!p.dead&&!p.inVan);}
 /* ================= CREATURES ================= */
 /* pace per creature (player: walk 4.1, sprint 6.4). speed = wander/patrol, hunt = burst chase speed, burst = seconds it can hold the chase speed, rest = seconds of exhaustion afterwards (capped at tired speed 2.8) */
-const CR_CFG={echo:{hear:40,sight:16,speed:1.2,hunt:4.6,burst:4,rest:5,hover:0,r:0.45,h:2.9},crawler:{hear:25,sight:20,speed:2.0,hunt:6.0,burst:2.5,rest:6,hover:0,r:0.7,h:1.0},lighteater:{hear:8,sight:30,speed:1.4,hunt:2.4,burst:99,rest:0,hover:1.0,r:0.9,h:1.6},window:{hear:0,sight:0,speed:0,hunt:0,burst:99,rest:0,hover:0,r:0.4,h:2.1},hound:{hear:55,sight:12,speed:2.2,hunt:6.8,burst:2.2,rest:5,hover:0,r:0.5,h:1.0},stack:{hear:0,sight:0,speed:0,hunt:4.2,burst:3,rest:6,hover:0,r:0.5,h:1.2},drifter:{hear:0,sight:0,speed:0.5,hunt:0.5,burst:99,rest:0,hover:1.4,r:0.5,h:1.2},warden:{hear:30,sight:40,speed:2.0,hunt:3.0,burst:99,rest:0,hover:0,r:0.85,h:3.5},mourner:{hear:0,sight:0,speed:0,hunt:0,burst:99,rest:0,hover:0,r:0.5,h:1.8},hanger:{hear:0,sight:0,speed:0,hunt:0,burst:99,rest:0,hover:0,r:0.5,h:2.4},collector:{hear:20,sight:14,speed:2.0,hunt:3.8,burst:4,rest:4,hover:0,r:0.5,h:1.3},sleeper:{hear:60,sight:10,speed:2.4,hunt:5.6,burst:3,rest:7,hover:0,r:1.7,h:2.2},mimic:{hear:0,sight:12,speed:2.8,hunt:4.9,burst:3,rest:6,hover:0,r:0.45,h:0.7},swarm:{hear:0,sight:20,speed:1.3,hunt:2.4,burst:99,rest:0,hover:1.4,r:0.8,h:1.6},burrower:{hear:30,sight:0,speed:2.2,hunt:2.2,burst:99,rest:0,hover:0,r:0.8,h:1.3},twin:{hear:0,sight:16,speed:0.9,hunt:6.6,burst:1.6,rest:8,hover:0,r:0.45,h:2.1}};
+const CR_CFG={echo:{hear:40,sight:16,speed:1.2,hunt:4.6,burst:4,rest:5,hover:0,r:0.45,h:2.9},crawler:{hear:25,sight:20,speed:2.0,hunt:6.0,burst:2.5,rest:6,hover:0,r:0.7,h:1.0},lighteater:{hear:8,sight:30,speed:1.4,hunt:2.4,burst:99,rest:0,hover:1.0,r:0.9,h:1.6},window:{hear:0,sight:0,speed:0,hunt:0,burst:99,rest:0,hover:0,r:0.4,h:2.1},hound:{hear:55,sight:11,speed:2.2,hunt:5.9,burst:2.0,rest:5.5,hover:0,r:0.5,h:1.0},stack:{hear:0,sight:0,speed:0,hunt:4.2,burst:3,rest:6,hover:0,r:0.5,h:1.2},drifter:{hear:0,sight:0,speed:0.5,hunt:0.5,burst:99,rest:0,hover:1.4,r:0.5,h:1.2},warden:{hear:30,sight:40,speed:2.0,hunt:3.0,burst:99,rest:0,hover:0,r:0.85,h:3.5},mourner:{hear:0,sight:0,speed:0,hunt:0,burst:99,rest:0,hover:0,r:0.5,h:1.8},hanger:{hear:0,sight:0,speed:0,hunt:0,burst:99,rest:0,hover:0,r:0.5,h:2.4},collector:{hear:20,sight:14,speed:2.0,hunt:3.8,burst:4,rest:4,hover:0,r:0.5,h:1.3},sleeper:{hear:60,sight:10,speed:2.4,hunt:5.6,burst:3,rest:7,hover:0,r:1.7,h:2.2},mimic:{hear:0,sight:12,speed:2.8,hunt:4.9,burst:3,rest:6,hover:0,r:0.45,h:0.7},swarm:{hear:0,sight:20,speed:1.3,hunt:2.4,burst:99,rest:0,hover:1.4,r:0.8,h:1.6},burrower:{hear:30,sight:0,speed:2.2,hunt:2.2,burst:99,rest:0,hover:0,r:0.8,h:1.3},twin:{hear:0,sight:16,speed:0.9,hunt:6.6,burst:1.6,rest:8,hover:0,r:0.45,h:2.1}};
 const TIRED_SPEED=2.8;
 function paceSpeed(c,speed,dt){const cfg=CR_CFG[c.kind];if(!cfg||speed<=0)return speed;speed=Math.min(speed,Math.max(cfg.speed,cfg.hunt)*1.15);const fast=speed>cfg.speed*1.05+0.05;
   if(c.restT>0){c.restT-=dt;if(c.restT<=0)c.tired=false;return Math.min(speed,Math.min(TIRED_SPEED,Math.max(cfg.speed,1.0)));}
@@ -1369,6 +1369,9 @@ function spawnCreature(kind,x,z,k,opts){opts=opts||{};const id=opts.id||('c'+(cr
   if(!S.stats.creaturesMet[kind]){S.stats.creaturesMet[kind]=true;}
   return c;}
 function removeCreature(c){G.creatures=G.creatures.filter(x=>x!==c);c.rig.root.traverse(o=>{if(o.isSprite)o.visible=false;});if(c.rig.root.userData.dissolve&&c.visible){G.dissolving=G.dissolving||[];G.dissolving.push({root:c.rig.root,t:0,mixer:c.rig.mixer});}else G.scene.remove(c.rig.root);if(mpHost()&&MP.on)bcast({t:'ev',k:'despawn',id:c.id});}
+function beamOnCreature(c,pl,range){if(!pl.flash||pl.k!==c.k||pl.dead)return false;const d=c.pos.distanceTo(pl.pos);if(d>range||d<0.3)return false;let yaw,pitch;if(pl.local){yaw=P.yaw;pitch=P.pitch;}else{const a=G.avatars[pl.id];if(!a)return false;yaw=a.yaw;pitch=(a.net&&a.net.pitch)||0;}
+  const fx=-Math.sin(yaw)*Math.cos(pitch),fy=Math.sin(pitch),fz=-Math.cos(yaw)*Math.cos(pitch);const tx=c.pos.x-pl.pos.x,ty=(c.pos.y+0.5)-(pl.pos.y+1.5),tz=c.pos.z-pl.pos.z;const dot=(fx*tx+fy*ty+fz*tz)/d;if(dot<0.93)return false;return losClear(G.map,c.k,pl.pos.x,pl.pos.z,c.pos.x,c.pos.z);}
+function breakObjHost(o){if(typeof breakObj==='function')breakObj(o);}
 function canSee(c,pl,range){if(pl.k!==c.k||pl.dead)return false;const d=c.pos.distanceTo(pl.pos);let r=range||CR_CFG[c.kind].sight;if(!pl.flash&&!roomLit(pl.k,pl.pos.x,pl.pos.z))r*=0.4;if(pl.crouch)r*=0.7;if(d>r)return false;return losClear(G.map,c.k,c.pos.x,c.pos.z,pl.pos.x,pl.pos.z);}
 function roomLit(k,x,z){for(const l of G.lights){if(l.k!==k||!l.on)continue;if(dist2(l.x,l.z,x,z)<7)return true;}for(const f of G.flareObjs){if(f.k===k&&dist2(f.p.x,f.p.z,x,z)<6)return true;}return false;}
 function nearestPlayer(c,filter){let best=null,bd=1e9;for(const p of allPlayers()){if(p.dead||p.inVan)continue;if(filter&&!filter(p))continue;const d=p.pos.distanceTo(c.pos)+(p.k!==c.k?LAYER_GAP*3:0);if(d<bd){bd=d;best=p;}}return best?{p:best,d:bd}:null;}
@@ -1402,7 +1405,7 @@ function creatureDoors(c,hx,hz,speed,dt){
       const ty=Math.atan2(d.x-c.pos.x,d.z-c.pos.z);let dy=((ty-c.yaw+Math.PI*3)%(Math.PI*2))-Math.PI;c.yaw+=dy*Math.min(1,dt*10);
       if(c.dwait<=0){c.ddoor=null;c.dclose=false;if(!playerNearDoor(d,1.3))setDoorHost(d,0,Math.random()<0.25);return false;}return true;}
     if(!d||d.broken||d.open>0.5||d.target>0.5){c.dwait=0;c.ddoor=null;return false;}
-    if(c.dwait<=0){c.ddoor=null;if(!d.locked||c.kind==='crawler'){d.locked=false;setDoorHost(d,1,false);}return false;}
+    if(c.dwait<=0){c.ddoor=null;if(!d.locked||c.kind==='crawler'){d.locked=false;setDoorHost(d,1,!!c.dslam);}c.dslam=false;return false;}
     return true;}
   const st=doorStyle(c);if(st==='seep')return false;
   /* the door we last passed: once we are through and a step beyond it, sometimes turn and close it */
@@ -1417,7 +1420,7 @@ function creatureDoors(c,hx,hz,speed,dt){
     if(c.kind==='warden'){if(c.state!=='smashdoor'){c.state='smashdoor';c.timer=3;c.door=dd;c.rig.play('smash',0.2,true);}return true;}
     if(dd.locked&&c.kind!=='crawler'){if(G.t-(dd.rattledT||0)>5){dd.rattledT=G.t;doorRattle(dd,1.4);}continue;}
     {const n=doorNormal(dd);c.pdoor=dd;c.pside=Math.sign((c.pos.x-dd.x)*n[0]+(c.pos.z-dd.z)*n[1])||1;}
-    if(st==='slam'){setDoorHost(dd,1,true);continue;}
+    if(st==='slam'){c.ddoor=dd;c.dwait=0.55;c.dslam=true;doorRattle(dd,0.55);return true;}
     if(st==='fast'){setDoorHost(dd,1,false);continue;}
     const wait=0.5+Math.random()*0.7;c.ddoor=dd;c.dwait=wait;doorRattle(dd,wait);return true;}
   return false;}
@@ -1486,15 +1489,28 @@ function updateCreaturesHost(dt){if(G.mission&&G.mission.zero)sigTick(dt);const 
         else if(c.timer<=0){c.visible=false;c.state='idle';if(c.close){hostEvent(pl.id,{k:'ach',id:'window'});per.count=0;c.timer=70;}else{per.count=Math.max(0,per.count-1);c.timer=30+Math.random()*30;}}}
       break;}
     case 'hound':{
+      /* light in its eyes: a beam held on it for ~0.8 s makes it cower and run */
+      {let lit=false;if(c.state==='chase'||c.state==='recoil'||c.state==='circle'||c.state==='fetch'){for(const p of alivePlayers()){if(beamOnCreature(c,p,9)){lit=true;break;}}}
+        c.lit=lit?(c.lit||0)+dt:Math.max(0,(c.lit||0)-dt*2);c.cowerCd=Math.max(0,(c.cowerCd||0)-dt);
+        if(lit&&c.lit>0.8&&c.cowerCd<=0&&c.state!=='cower'){c.state='cower';c.timer=2.4;c.cowerCd=9;c.lit=0;c.cool=Math.max(c.cool,1.5);const lp=alivePlayers().find(p=>beamOnCreature(c,p,9));c.fleeFrom=lp?lp.pos.clone():c.pos.clone();
+          if(MP.on)bcast({t:'ev',k:'sfx',kind:'hound',p:[c.pos.x,c.pos.y,c.pos.z]});Aud.creature('hound',c.pos,0.7);
+          if(lp&&!G.mission.houndLightHint){G.mission.houndLightHint=true;hostEvent(lp.id,{k:'toast',s:'🔦 It can\'t stand the light. Hold the beam on it and it runs.'});}}}
       if(c.state==='wander'){c.anim='idle';if(!c.wp||moveTo(c,c.wp.x,c.wp.z,c.wp.k,spd,dt)){c.wp=randomWalkCell(G.map,Math.random()<0.75?c.k:ri(Math.random,0,G.map.L-1));}if(Math.hypot(c.pos.x-(c.prevX||c.pos.x),c.pos.z-(c.prevZ||c.pos.z))>0.01)c.anim='run';
         if(c.lastHeard&&G.t-c.lastHeard.t<1&&c.lastHeard.loud>0.15){c.state='investigate';}}
       else if(c.state==='investigate'){c.anim='run';const h=c.lastHeard;if(!h||moveTo(c,h.x,h.z,h.k,hunt*0.9,dt)||G.t-h.t>15){c.state='sniff';c.timer=3;}}
       else if(c.state==='sniff'){c.anim='idle';if(c.timer<=0)c.state='wander';if(c.lastHeard&&G.t-c.lastHeard.t<1&&c.lastHeard.loud>0.15)c.state='investigate';}
+      else if(c.state==='cower'){c.anim='run';const f=c.fleeFrom||c.pos;const dx=c.pos.x-f.x,dz=c.pos.z-f.z;const dl=Math.hypot(dx,dz)||1;moveTo(c,c.pos.x+dx/dl*4,c.pos.z+dz/dl*4,c.k,5.2,dt);if(c.timer<=0){c.state='sniff';c.timer=2.5;}}
+      else if(c.state==='fetch'){c.anim='run';const o=c.fetchObj;if(!o||o.held!==null||o.k!==c.k||moveTo(c,o.p.x,o.p.z,o.k,hunt,dt)||c.timer<=0){c.state='sniff';c.timer=2;c.fetchObj=null;if(o&&o.frag&&!o.broken&&c.timer<=2&&dist2(o.p.x,o.p.z,c.pos.x,c.pos.z)<1.5){breakObjHost(o);}}}
+      else if(c.state==='recoil'){/* after a bite it backs off: this is the player's window */c.anim='run';const pl=allPlayers().find(p=>p.id===c.target);const f=pl?pl.pos:c.pos;const dx=c.pos.x-f.x,dz=c.pos.z-f.z;const dl=Math.hypot(dx,dz)||1;moveTo(c,c.pos.x+dx/dl*3.5,c.pos.z+dz/dl*3.5,c.k,5.0,dt);
+        if(c.timer<=0){c.state='circle';c.timer=1.1+Math.random()*0.5;if(MP.on)bcast({t:'ev',k:'sfx',kind:'hound_growl',p:[c.pos.x,c.pos.y,c.pos.z]});Aud.creature('hound_growl',c.pos,1);}}
+      else if(c.state==='circle'){c.anim='idle';const pl=allPlayers().find(p=>p.id===c.target);if(pl){const ty=Math.atan2(pl.pos.x-c.pos.x,pl.pos.z-c.pos.z);let dy=((ty-c.yaw+Math.PI*3)%(Math.PI*2))-Math.PI;c.yaw+=dy*Math.min(1,dt*6);}if(c.timer<=0){c.state='chase';c.lastSeen=G.t;}}
       else if(c.state==='chase'){const pl=allPlayers().find(p=>p.id===c.target);if(!pl||pl.dead||pl.inVan){c.state='wander';break;}c.anim='run';moveTo(c,pl.pos.x,pl.pos.z,pl.k,hunt,dt);const d=c.pos.distanceTo(pl.pos);
-        const hidden=pl.crouch&&pl.speed<0.3&&!pl.flash&&d>2.5&&!roomLit(pl.k,pl.pos.x,pl.pos.z);c.hideT=hidden?(c.hideT||0)+dt:0;if(c.hideT>3||(!canSee(c,pl,40)&&G.t-c.lastSeen>6)){c.state='sniff';c.timer=3;c.target=null;break;}if(canSee(c,pl,40))c.lastSeen=G.t;
-        if(c.lastHeard&&c.lastHeard.kind==='impact'&&G.t-c.lastHeard.t<0.5&&c.lastHeard.loud>0.5&&Math.random()<0.4){c.state='investigate';c.target=null;break;}
-        if(d<reach('hound')&&pl.k===c.k&&c.cool<=0){c.cool=1.2;c.anim='bite';c.rig.play('bite',0.1,true);hostDamage(pl.id,28,'hound');creatureAttackNoted(c);if(MP.on)bcast({t:'ev',k:'sfx',kind:'hound',p:[c.pos.x,c.pos.y,c.pos.z]});Aud.creature('hound',c.pos,1.2);}}
-      if(c.state!=='chase'){for(const p of alivePlayers()){if(canSee(c,p)){c.state='chase';c.target=p.id;c.lastSeen=G.t;if(MP.on)bcast({t:'ev',k:'sfx',kind:'hound_bark',p:[c.pos.x,c.pos.y,c.pos.z]});Aud.creature('hound_bark',c.pos,1.4);break;}}}
+        const hidden=pl.crouch&&pl.speed<0.3&&!pl.flash&&d>2.5&&!roomLit(pl.k,pl.pos.x,pl.pos.z);c.hideT=hidden?(c.hideT||0)+dt:0;if(c.hideT>2.2||(!canSee(c,pl,40)&&G.t-c.lastSeen>4.5)){c.state='sniff';c.timer=3;c.target=null;break;}if(canSee(c,pl,40))c.lastSeen=G.t;
+        /* anything thrown near it is more interesting than you */{let fo=null;for(const o of G.objs){if(o.k!==c.k||o.held!==null||o.carrier)continue;if(o.v.length()>3.5&&o.thrownAt&&G.t-o.thrownAt<3&&dist2(o.p.x,o.p.z,c.pos.x,c.pos.z)<7){fo=o;break;}}if(fo){c.state='fetch';c.fetchObj=fo;c.timer=4;c.target=null;if(MP.on)bcast({t:'ev',k:'sfx',kind:'hound_bark',p:[c.pos.x,c.pos.y,c.pos.z]});Aud.creature('hound_bark',c.pos,1);break;}}
+        if(c.lastHeard&&c.lastHeard.kind==='impact'&&G.t-c.lastHeard.t<0.5&&c.lastHeard.loud>0.5&&Math.random()<0.5){c.state='investigate';c.target=null;break;}
+        if(d<reach('hound')&&pl.k===c.k&&c.cool<=0){c.cool=3;c.anim='bite';c.rig.play('bite',0.1,true);hostDamage(pl.id,16,'hound');creatureAttackNoted(c);if(MP.on)bcast({t:'ev',k:'sfx',kind:'hound',p:[c.pos.x,c.pos.y,c.pos.z]});Aud.creature('hound',c.pos,1.2);c.state='recoil';c.timer=1.4;
+          if(!G.mission.houndBiteHint){G.mission.houndBiteHint=true;hostEvent(pl.id,{k:'toast',s:'🐕 It bites and backs off. That pause is your window: run, throw something, or put your light in its eyes.'});}}}
+      if(c.state!=='chase'&&c.state!=='recoil'&&c.state!=='circle'&&c.state!=='cower'&&c.state!=='fetch'){for(const p of alivePlayers()){if(canSee(c,p)){c.state='chase';c.target=p.id;c.lastSeen=G.t;if(MP.on)bcast({t:'ev',k:'sfx',kind:'hound_bark',p:[c.pos.x,c.pos.y,c.pos.z]});Aud.creature('hound_bark',c.pos,1.4);break;}}}
       c.prevX=c.pos.x;c.prevZ=c.pos.z;break;}
     case 'stack':{
       if(c.state==='hidden'){c.anim='idle';}
