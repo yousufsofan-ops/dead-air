@@ -117,7 +117,7 @@ function clientEvent(d){if(G.state!=='play'&&['spawn'].indexOf(d.k)<0)return;
     case 'held':{const o=G.objById[d.id];if(!o)return;if(d.pid===null||d.pid===undefined){o.held=null;o.holders=[];o.mesh.visible=true;o.sleep=false;if(d.p)o.p.set(d.p[0],d.p[1],d.p[2]);if(d.v)o.v.set(d.v[0],d.v[1],d.v[2]);if(d.spin)o.spin=d.spin;if(P.hands===o.id)P.hands=null;const i=P.pockets.indexOf(o.id);if(i>=0)P.pockets.splice(i,1);updateInv();}else{o.held=d.pid;o.lastHolder=d.pid;o.mesh.visible=!d.pocket;if(d.pid!==P.id&&(P.hands===o.id||P.pockets.indexOf(o.id)>=0)){/* stolen race: we lose it */P.hands=P.hands===o.id?null:P.hands;P.pockets=P.pockets.filter(x=>x!==o.id);updateInv();toast('🫳 '+nameOf(d.pid)+' grabbed that first.');}}break;}
     case 'holders':{const o=G.objById[d.id];if(o){o.holders=d.h.slice();o.held=null;if(o.holders.length>=2&&o.holders.indexOf(P.id)>=0)toast('🫳 Both carrying — move together');}break;}
     case 'rattle':{const dd=G.doors[d.id];if(dd){dd.rattle=d.t;Aud.rattle(new THREE.Vector3(dd.x,layerY(dd.k)+1,dd.z),d.t);}break;}
-    case 'door':{const dd=G.doors[d.id];if(dd){dd.target=d.o;Aud.door(new THREE.Vector3(dd.x,layerY(dd.k)+1,dd.z),d.slam);}break;}
+    case 'door':{const dd=G.doors[d.id];if(dd){dd.target=d.o;Aud.door(new THREE.Vector3(dd.x,layerY(dd.k)+1,dd.z),d.slam);if(d.slam)doorSlamFeel(dd);}break;}
     case 'unlock':{const dd=G.doors[d.id];if(dd){dd.locked=false;dd.target=1;}break;}
     case 'doorbreak':{const dd=G.doors[d.id];if(dd){dd.broken=true;dd.open=dd.target=1;if(dd.mesh)dd.mesh.visible=false;Aud.impact(1,new THREE.Vector3(dd.x,layerY(dd.k)+1,dd.z));}break;}
     case 'doc':{const dd=G.docs.find(x=>x.id===d.id);if(dd){dd.read=true;if(dd.mesh)dd.mesh.visible=false;}break;}

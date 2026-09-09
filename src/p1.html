@@ -140,6 +140,10 @@ body.touch #hudHints{display:none}
 #sub{position:absolute;left:50%;bottom:110px;transform:translateX(-50%);font-size:15px;color:#ddd;text-shadow:0 1px 3px #000;font-style:italic;background:rgba(0,0,0,.35);padding:3px 10px;border-radius:4px;white-space:nowrap}
 #vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.7) 100%);z-index:2}
 #hurt{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 40%,rgba(200,0,0,.55) 100%);opacity:0;transition:opacity .2s;z-index:2}
+#floats{position:fixed;left:50%;top:54%;width:0;pointer-events:none;z-index:6}
+.flt{position:absolute;left:0;transform:translateX(-50%);white-space:nowrap;font-weight:bold;font-size:18px;letter-spacing:.04em;text-shadow:0 2px 8px #000,0 0 12px rgba(0,0,0,.8);animation:fltUp 1.15s cubic-bezier(.2,.8,.3,1) forwards}
+.flt.gold{color:var(--amber)}.flt.red{color:var(--red)}.flt.grn{color:var(--grn)}.flt.dim{color:#c8cfd6;font-size:14px}
+@keyframes fltUp{0%{opacity:0;transform:translate(-50%,14px) scale(.7)}18%{opacity:1;transform:translate(-50%,0) scale(1.18)}30%{transform:translate(-50%,-4px) scale(1)}100%{opacity:0;transform:translate(-50%,-64px) scale(.95)}}
 #fade{position:fixed;inset:0;background:#000;pointer-events:none;opacity:0;transition:opacity .6s;z-index:30}
 #glitch{position:fixed;inset:0;pointer-events:none;opacity:0;mix-blend-mode:screen;background:repeating-linear-gradient(90deg,rgba(255,0,60,.15) 0 3px,transparent 3px 9px,rgba(0,255,220,.12) 9px 11px,transparent 11px 20px);z-index:2}
 #downed{position:absolute;left:50%;top:38%;transform:translateX(-50%);text-align:center;display:none}
@@ -294,7 +298,8 @@ body.touch #hudHints{display:none}
   </div>
   <div id="downed"><b>DOWNED</b><span id="downedT">Crawl. Call for help. Don't die.</span></div>
   <div id="pingWheel"></div>
-  <div id="toasts"></div>
+  <div id="floats"></div>
+<div id="toasts"></div>
   <div id="sub"></div>
   <div id="chatLog"></div>
   <div id="chatIn"><input type="text" id="chatTxt" maxlength="120" placeholder="Say something (Enter)…"></div>
