@@ -31,6 +31,10 @@ function loadSave(){try{const d=JSON.parse(localStorage.getItem(SAVE_KEY)||'null
 function deepMerge(t,s){for(const k in s){if(s[k]&&typeof s[k]==='object'&&!Array.isArray(s[k])&&t[k]&&typeof t[k]==='object'){deepMerge(t[k],s[k]);}else t[k]=s[k];}}
 let saveT=0;
 function save(){try{S.sig=sigOf(S);localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){}}
+/* ---- save export / import: a text code you can paste into another browser (or the Steam build) ---- */
+function saveExportCode(){save();const json=JSON.stringify(S);const b64=btoa(unescape(encodeURIComponent(json)));return 'DEADAIR1.'+b64+'.'+hashStr(b64+'|da-export');}
+function saveParseCode(code){code=String(code||'').trim().replace(/\s+/g,'');if(!code.startsWith('DEADAIR1.'))throw new Error('That is not a DEAD AIR save code.');const parts=code.split('.');if(parts.length!==3)throw new Error('The code is incomplete. Copy the whole thing.');const b64=parts[1];if(String(hashStr(b64+'|da-export'))!==parts[2])throw new Error('The code is damaged (checksum mismatch). Copy it again.');const d=JSON.parse(decodeURIComponent(escape(atob(b64))));if(!d||typeof d!=='object'||d.credits===undefined||!d.set)throw new Error('The code does not contain a save.');return d;}
+function saveImport(d){localStorage.setItem(SAVE_KEY,JSON.stringify(d));localStorage.setItem(SAVE_KEY+'_imported',String(Date.now()));location.reload();}
 function sigOf(s){return hashStr(String(s.credits)+'|'+s.baseLv+'|'+s.missions+'|'+JSON.stringify(s.up)+'|da-salt-1979');}
 (function(){try{const d=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');if(d&&d.sig!==undefined&&d.sig!==sigOf(S)){S.credits=Math.min(S.credits,DEF_SAVE.credits);S.up=JSON.parse(JSON.stringify(DEF_SAVE.up));S.baseLv=1;console.warn('save signature mismatch — progression reset');}}catch(e){}})();
 
