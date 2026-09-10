@@ -1,5 +1,5 @@
 /* ================= NETWORKING (PeerJS, host-authoritative) ================= */
-const MAXP=4;const PEER_OPT={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
+const MAXP=4;const PEER_OPT={debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}],iceCandidatePoolSize:4}};
 const MP={on:false,host:false,peer:null,code:'',conns:[],hostConn:null,myId:0,players:{},peerIds:{},nextId:1,name:'',busy:false,err:'',status:'',lobby:{contract:null,ready:{},started:false},snapT:0,inputT:0,ping:0,dropped:{},netLost:null,hostId:0,connecting:0,peerAlt:null};
 function mpHost(){return !MP.on||MP.host;}
 function mkCode(){const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++)s+=a[Math.floor(Math.random()*a.length)];return s;}

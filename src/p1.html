@@ -144,6 +144,7 @@ body.touch #hudHints{display:none}
 .flt{position:absolute;left:0;transform:translateX(-50%);white-space:nowrap;font-weight:bold;font-size:18px;letter-spacing:.04em;text-shadow:0 2px 8px #000,0 0 12px rgba(0,0,0,.8);animation:fltUp 1.15s cubic-bezier(.2,.8,.3,1) forwards}
 .flt.gold{color:var(--amber)}.flt.red{color:var(--red)}.flt.grn{color:var(--grn)}.flt.dim{color:#c8cfd6;font-size:14px}
 @keyframes fltUp{0%{opacity:0;transform:translate(-50%,14px) scale(.7)}18%{opacity:1;transform:translate(-50%,0) scale(1.18)}30%{transform:translate(-50%,-4px) scale(1)}100%{opacity:0;transform:translate(-50%,-64px) scale(.95)}}
+.padfocus{outline:2px solid var(--amber)!important;outline-offset:2px;box-shadow:0 0 12px rgba(217,164,65,.45)!important}
 #fade{position:fixed;inset:0;background:#000;pointer-events:none;opacity:0;transition:opacity .6s;z-index:30}
 #glitch{position:fixed;inset:0;pointer-events:none;opacity:0;mix-blend-mode:screen;background:repeating-linear-gradient(90deg,rgba(255,0,60,.15) 0 3px,transparent 3px 9px,rgba(0,255,220,.12) 9px 11px,transparent 11px 20px);z-index:2}
 #downed{position:absolute;left:50%;top:38%;transform:translateX(-50%);text-align:center;display:none}

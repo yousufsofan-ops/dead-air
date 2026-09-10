@@ -15,7 +15,7 @@ def main():
     tmp = os.path.join(ROOT, '.build_check.js')
     open(tmp, 'w', encoding='utf-8').write(js)
     try:
-        r = subprocess.run(['node', '--check', tmp], capture_output=True, text=True)
+        r = subprocess.run(['node', '--check', tmp], capture_output=True, text=True, encoding='utf-8', errors='replace')
         print('SYNTAX_OK' if r.returncode == 0 else r.stderr)
         if r.returncode: sys.exit(1)
     except FileNotFoundError:
