@@ -162,6 +162,7 @@ function genMap(seed,loc,diff,opts){
   {const reach=reachFrom(map,0,map.spawn.x,map.spawn.z);let un=0;for(let k=0;k<L;k++)for(const r of map.layers[k].rooms){if(!reach.has(k*W*H+idx(r.x,r.z)))un++;}
     if(un&&(opts.retry||0)<8)return genMap(seed+7919,loc,diff,Object.assign({},opts,{retry:(opts.retry||0)+1}));map.regen=opts.retry||0;}
   for(let i=0;i<4;i++){const a=i/4*TAU+rng();const it=rollItem(rng,1,true,lootMult*1.3);map.items.push({tpl:it.tpl,value:it.value,x:map.deepRoom.cx+Math.sin(a)*2.3,z:map.deepRoom.cz+Math.cos(a)*2.3,k:map.deepRoom.k,id:'nest'+i,room:map.deepRoom.id,rot:rng()*TAU});}
+  levelDesignPass(map);
   return map;
 }
 let _darkLoc=false;
@@ -233,6 +234,16 @@ function findPath(map,k0,x0,z0,k1,x1,z1,opts){opts=opts||{};const W=map.W;const 
   const path=[];let cur=goal;while(cur!==-1&&cur!==undefined){const k=Math.floor(cur/(W*map.H)),c=cur%(W*map.H);path.push({x:(c%W+0.5)*CELL,z:(Math.floor(c/W)+0.5)*CELL,k});cur=prev.get(cur);}
   path.reverse();path[path.length-1]={x:x1,z:z1,k:k1};if(path.length>1)path.shift();return path;
 }
+/* ---- level design pass: critical path per floor, breather rooms, key placement validation ---- */
+function levelDesignPass(map){try{const keyTpl=(typeof ITEMS!=='undefined')?ITEMS.findIndex(i=>i.key):-1;map.safeRooms=[];
+  for(let k=0;k<map.L;k++){const lay=map.layers[k];
+    /* the way in: the van on the surface, the stairs you arrive by below */let from=null;if(k===0)from={x:map.van.x,z:map.van.z-2};else{const st=map.stairs.find(s=>s.k===k-1);if(st)from={x:(st.x+st.dx*3+0.5)*CELL,z:(st.z+st.dz*3+0.5)*CELL};}
+    /* the way on: the stairs down, or the deepest room on the last floor */let to=null;const dn=map.stairs.find(s=>s.k===k);if(dn)to={x:(dn.x-dn.dx+0.5)*CELL,z:(dn.z-dn.dz+0.5)*CELL};else if(map.deepRoom&&map.deepRoom.k===k)to={x:map.deepRoom.cx,z:map.deepRoom.cz};
+    if(from&&to){const p=findPath(map,k,from.x,from.z,k,to.x,to.z);if(p&&p.length>1)lay.guide=[{x:from.x,z:from.z}].concat(p.map(w=>({x:w.x,z:w.z})));}
+    /* breather room: the closest real room to where you arrive (not the vault, not a corridor stub) */if(from){let best=null,bd=1e9;for(const r of lay.rooms){if(r.type==='vault'||r.type==='hall'||r.w<2||r.h<2)continue;const d=dist2(r.cx,r.cz,from.x,from.z);if(d<bd){bd=d;best=r;}}if(best&&bd<26){best.safe=true;map.safeRooms.push({k,id:best.id,cx:best.cx,cz:best.cz});}}
+    /* the red key must never sit behind the red door */if(keyTpl>=0)for(const it of map.items){if(it.k!==k||it.tpl!==keyTpl)continue;const rid=roomAt(map,k,it.x,it.z);const r=lay.rooms.find(q=>q.id===rid);if(r&&r.type==='vault'){const alt=lay.rooms.filter(q=>q.type!=='vault'&&q.type!=='hall');if(alt.length){const q=alt[Math.floor(alt.length/2)];it.x=q.cx+0.6;it.z=q.cz-0.4;it.room=q.id;}}}}
+  /* breather rooms keep their lights: never dead, never flickering, immune to blackouts */for(const l of map.lights){const rid=roomAt(map,l.k,l.x,l.z);const r=map.layers[l.k].rooms.find(q=>q.id===rid);if(r&&r.safe){l.safe=true;l.dead=false;l.on=true;l.flicker=false;}}
+  }catch(e){console.warn('levelDesignPass',e);}}
 function randomWalkCell(map,k,rng){const lay=map.layers[k];for(let i=0;i<200;i++){const cx=Math.floor((rng||Math.random)()*map.W),cz=Math.floor((rng||Math.random)()*map.H);const c=lay.cells[cz*map.W+cx];if(c===T_ROOM||c===T_CORR)return {x:(cx+0.5)*CELL,z:(cz+0.5)*CELL,k};}return {x:lay.rooms[0].cx,z:lay.rooms[0].cz,k};}
 
 /* reachable cell keys (k*W*H+cellIndex) from a world position, same movement rules as findPath */

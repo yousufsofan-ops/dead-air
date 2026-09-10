@@ -82,6 +82,8 @@ function buildWorld(map){
     const fl=[],ce=[];
     for(let z=0;z<map.H;z++)for(let x=0;x<map.W;x++){const c=lay.cells[z*map.W+x];if(c===T_VOID||c===T_STAIR)continue;if(c===T_YARD)continue;fl.push([x,z]);if(c!==T_ELEV)ce.push([x,z]);}
     const fm=new THREE.InstancedMesh(tileGeo,floorMat,fl.length);fm.receiveShadow=true;fl.forEach((c,i)=>{v3.set((c[0]+0.5)*CELL,y-0.06,(c[1]+0.5)*CELL);q.identity();s3.set(1,1,1);m4.compose(v3,q,s3);fm.setMatrixAt(i,m4);});grp.add(fm);
+    if(lay.guide&&lay.guide.length>1){const gcol=[0x7ddc7d,0xffd27a,0x8fb6ff,0xff8fb0,0xc8ff8f][k%5];const gmat=new THREE.MeshBasicMaterial({color:gcol,transparent:true,opacity:0.3,depthWrite:false});const gg=lay.guide;for(let i=0;i<gg.length-1;i++){const a=gg[i],b=gg[i+1];const dx=b.x-a.x,dz=b.z-a.z;const len=Math.hypot(dx,dz);if(len<0.05)continue;const sm=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.012,len+0.2),gmat);sm.position.set((a.x+b.x)/2,y+0.006,(a.z+b.z)/2);sm.rotation.y=Math.atan2(dx,dz);sm.renderOrder=2;sm.userData.own=true;grp.add(sm);}}
+    for(const r of lay.rooms){if(r.safe)grp.add(stairSign('REST · SAFE ROOM','#7ddc7d',r.cx,y+2.55,r.cz));}
     const cm=new THREE.InstancedMesh(tileGeo,ceilMat,ce.length);ce.forEach((c,i)=>{v3.set((c[0]+0.5)*CELL,y+WALL_H+0.06,(c[1]+0.5)*CELL);q.identity();m4.compose(v3,q,s3);cm.setMatrixAt(i,m4);});grp.add(cm);
     /* windows */
     for(const w of lay.walls.filter(w=>w.win)){const wf=Assets.clone('props','window_frame');wf.position.set(w.x,y,w.z);wf.rotation.y=w.rot===1?Math.PI/2:0;grp.add(wf);
@@ -222,17 +224,17 @@ function updatePlayer(dt){
   if(P.dead){updateSpectate(dt);return;}
   const cam=G.cam;
   /* look */const smo=Math.min(0.85,Math.max(0,S.set.smooth||0));P.smDX=(P.smDX||0)*smo+mouseDX*(1-smo);P.smDY=(P.smDY||0)*smo+mouseDY*(1-smo);if(Math.abs(P.smDX)<0.01)P.smDX=0;if(Math.abs(P.smDY)<0.01)P.smDY=0;mouseDX=P.smDX;mouseDY=P.smDY;const mdx=mouseDX,mdy=mouseDY;const sens=S.set.sens*0.0022;P.yaw-=mouseDX*sens;P.pitch-=mouseDY*sens*(S.set.invertY?-1:1);P.pitch=clamp(P.pitch,S.set.tp?-1.15:-1.5,S.set.tp?1.25:1.5);mouseDX=mouseDY=0;P.swayX=lerp(P.swayX||0,clamp(-mdx*0.0012,-0.04,0.04),1-Math.exp(-7*dt));P.swayY=lerp(P.swayY||0,clamp(mdy*0.0009,-0.03,0.03),1-Math.exp(-7*dt));
-  /* move input */let ix=0,iz=0;if(K.KeyW||K.ArrowUp)iz-=1;if(K.KeyS||K.ArrowDown)iz+=1;if(K.KeyA||K.ArrowLeft)ix-=1;if(K.KeyD||K.ArrowRight)ix+=1;if(GP.mx||GP.my){ix+=GP.mx;iz+=GP.my;}if(TOUCH.mx||TOUCH.my){ix+=TOUCH.mx;iz+=TOUCH.my;}
+  /* move input */let ix=0,iz=0;if(held('forward')||K.ArrowUp)iz-=1;if(held('back')||K.ArrowDown)iz+=1;if(held('left')||K.ArrowLeft)ix-=1;if(held('right')||K.ArrowRight)ix+=1;if(GP.mx||GP.my){ix+=GP.mx;iz+=GP.my;}if(TOUCH.mx||TOUCH.my){ix+=TOUCH.mx;iz+=TOUCH.my;}
   const il=Math.hypot(ix,iz);if(il>1){ix/=il;iz/=il;}
-  P.sprint=!!(K.ShiftLeft||K.ShiftRight||GP.sprint)&&iz<0&&!P.downed;
-  const wantCrouch=!!(K.ControlLeft||K.KeyC||GP.crouch);if(S.set.crouchToggle){if(wantCrouch&&!P._cHeld)P.crouch=!P.crouch;P._cHeld=wantCrouch;}else P.crouch=wantCrouch;
+  {const sIn=!!(held('sprint')||K.ShiftRight||GP.sprint);if(S.set.sprintToggle){if(sIn&&!P._sHeld)P.sprintT=!P.sprintT;P._sHeld=sIn;if(iz>=0||P.stamina<=0.02)P.sprintT=false;P.sprint=!!P.sprintT&&iz<0&&!P.downed;}else P.sprint=sIn&&iz<0&&!P.downed;}
+  const wantCrouch=!!(held('crouch')||K.ControlLeft||GP.crouch);if(S.set.crouchToggle){if(wantCrouch&&!P._cHeld)P.crouch=!P.crouch;P._cHeld=wantCrouch;}else P.crouch=wantCrouch;
   if(P.downed)P.crouch=true;
   const sp=moveSpeed();const sy=Math.sin(P.yaw),cy=Math.cos(P.yaw);
   const wx=(ix*cy+iz*sy)*sp,wz=(-ix*sy+iz*cy)*sp; /* yaw 0 = looking -z */
   const acc=P.onGround?12:3;P.vel.x=lerp(P.vel.x,wx,1-Math.exp(-acc*dt));P.vel.z=lerp(P.vel.z,wz,1-Math.exp(-acc*dt));
-  if(P.sprint&&il>0){P.stamina=Math.max(0,P.stamina-dt*0.16*(G.map.loc.cold?1.3:1)/(perk(1)?1.15:1));if(P.stamina<=0)P.sprint=false;}else P.stamina=Math.min(1,P.stamina+dt*(P.crouch?0.18:0.12)*(G.map.loc.cold?0.6:1)*(perk(1)?1.15:1));
+  if(P.sprint&&il>0){P.stamina=Math.max(0,P.stamina-dt*0.16*(G.map.loc.cold?1.3:1)/(perk(1)?1.15:1));if(P.stamina<=0)P.sprint=false;}else P.stamina=Math.min(1,P.stamina+dt*(P.crouch?0.18:0.12)*(G.map.loc.cold?0.6:1)*(perk(1)?1.15:1)*(P.inSafe?1.8:1));if(P.inSafe&&P.hp<60&&!P.dead&&!P.downed){P.hp=Math.min(60,P.hp+dt*1.2);}
   if(P.grabbedT&&G.t<P.grabbedT){P.vel.x=0;P.vel.z=0;}
-  /* jump */if((K.Space||GP.jump)&&P.onGround&&!P.downed&&P.stamina>0.05&&!P._jHeld){P.vel.y=Math.sqrt(2*G.gravity*(G.gravity<12?1.6:1.1));P.onGround=false;P.stamina-=0.06;}P._jHeld=!!(K.Space||GP.jump);
+  /* jump: buffered press + coyote time */{const jp=!!(held('jump')||GP.jump);if(jp&&!P._jHeld)P.jumpBuf=0.12;else P.jumpBuf=Math.max(0,(P.jumpBuf||0)-dt);P.coyote=P.onGround?0.1:Math.max(0,(P.coyote||0)-dt);if(P.jumpBuf>0&&P.coyote>0&&!P.downed&&P.stamina>0.05){P.vel.y=Math.sqrt(2*G.gravity*(G.gravity<12?1.6:1.1));P.onGround=false;P.coyote=0;P.jumpBuf=0;P.stamina-=0.06;}P._jHeld=jp;}
   P.vel.y-=G.gravity*dt;
   P.pos.x+=P.vel.x*dt;P.pos.z+=P.vel.z*dt;P.pos.y+=P.vel.y*dt;
   /* ground */let g=groundY(G.map,P.k,P.pos.x,P.pos.z);nearCols(G.map,P.k,P.pos.x,P.pos.z,_cols);for(const b of _cols){if(!b.prop)continue;if(P.pos.x>b.x0-0.1&&P.pos.x<b.x1+0.1&&P.pos.z>b.z0-0.1&&P.pos.z<b.z1+0.1){const top=layerY(P.k)+b.h;if(P.pos.y>=top-0.6&&top>g&&(b.h<=0.6||b.step||P.pos.y>=top-0.2))g=top;}}
@@ -310,7 +312,7 @@ function interact(){if(P.dead)return;const t=lookTarget();if(!t)return;
   else if(t.kind==='stack'){if(mpHost())stackReveal(t.ref,P.id);else sendAct({k:'stack',id:t.ref.id});}
   else if(t.kind==='mimic'){if(mpHost())mimicTrigger(t.ref,P.id);else sendAct({k:'mimic',id:t.ref.id});}
 }
-function holdInteract(dt){/* E held: generator/terminal/beacon/revive */const t=lookTarget();if(!t||!(K.KeyE||GP.use)){P.useT=0;P.useTarget=null;hidePrompt2();return;}
+function holdInteract(dt){/* E held: generator/terminal/beacon/revive */const t=lookTarget();if(!t||!(held('interact')||GP.use)){P.useT=0;P.useTarget=null;hidePrompt2();return;}
   if(['gen','term','beac','revive','siggen','sigterm'].indexOf(t.kind)<0){P.useT=0;return;}
   if(P.useTarget!==t.ref){P.useT=0;P.useTarget=t.ref;}
   const need=t.kind==='gen'?6:t.kind==='term'?7:t.kind==='beac'?5:t.kind==='siggen'?6:t.kind==='sigterm'?3:4;P.useT+=dt;if(t.kind==='siggen'){emitNoise(P.pos,P.k,0.9,'machine');if(Math.random()<dt*6)Aud.tone(60+Math.random()*40,0.1,'sawtooth',0.08,null,{lp:300});}
