@@ -91,6 +91,11 @@ CLIPS = [
     S('amb_rain', 'seamless rain on a tin roof of a forest research station, wind in trees', 16, 0.4, loop=True),
     S('amb_space', 'seamless derelict space station interior hum, low electrical drone, distant metallic ticking', 16, 0.4, loop=True),
     S('amb_music', 'seamless distant broken carnival music box playing slow and off key through tunnels, eerie', 16, 0.45, loop=True),
+    S('whisper_1', 'an intimate hoarse male whisper directly at the ear, saying behind you, horror, very close, dry, no music', 2.2, 0.8),
+    S('whisper_2', 'an intimate hoarse whisper directly at the ear, saying do not turn around, horror, very close, dry', 2.4, 0.8),
+    S('whisper_3', 'a wet whisper right at the ear that says we know your name, horror, very close, dry', 2.4, 0.8),
+    S('breath_close', 'slow heavy breathing of a large creature right behind the listener, wet, close, horror, dry', 4.0, 0.7),
+    S('fake_drop', 'a metal can knocked off a shelf and rolling on concrete in an empty warehouse, close', 2.0, 0.6),
     S('amb_home', 'seamless quiet suburban street at three in the morning, crickets, a porch light buzzing, one distant dog bark, very soft wind', 14, 0.4, loop=True),
     S('amb_yard', 'seamless night rain in an industrial yard, distant thunder, a van engine idling', 16, 0.4, loop=True),
 ]

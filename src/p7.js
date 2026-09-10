@@ -183,7 +183,7 @@ function startMission(contract,seed,late){const loc=LOCS.find(l=>l.id===contract
   setTimeout(()=>{buildWorld(G.map);playerReset();initDirector();NOISES.length=0;
     /* creature ecosystem (host) */if(mpHost()&&!M.sandbox&&!M.tutorial){const rng=mulberry(seed^0x5bd1e995);let eco=pick(ECOSYSTEMS,rng);if(contract.diffId==='easy'&&eco.length>2)eco=eco.slice(0,2);if(contract.diffId==='extreme'||contract.diffId==='nightmare')eco=eco.concat([pick(['hound','crawler','echo'],rng)]);if(contract.mode==='nightmare')eco=eco.concat(['warden']);
       for(const kind of eco){const n=kind==='drifter'?3:1;for(let i=0;i<n;i++){const k=kind==='warden'?0:ri(rng,Math.min(1,G.map.L-1),G.map.L-1);const rp=randomWalkCell(G.map,k,rng);spawnEco(kind,k,rp,rng);}}
-      M.eco=eco;if($('cineDet'))$('cineDet').textContent=eco.length?eco.map(k=>CREATURES[k].n).join(' · '):'no major signatures (hazards likely)';}
+      M.eco=eco;M.startT=G.t;if($('cineDet'))$('cineDet').textContent=eco.length?eco.map(k=>CREATURES[k].n).join(' · '):'no major signatures (hazards likely)';}
     if(!mpHost()&&$('cineDet'))$('cineDet').textContent='host is scanning…';
     if(late){M.time=late.time||0;setStage(late.stage||1);}
     for(const id in MP.players){if(+id!==P.id)createAvatar(+id,MP.players[id]);}

@@ -196,7 +196,7 @@ const EVENT_DEFS=[
  {id:'intern',w:0.4,minStage:1,d:'The Intern'},
 ];
 const CREATURES={
- echo:{n:'The Echo',ic:'🗣',major:true,threat:3,d:'Listens. Learns voices. Uses them.'},
+ echo:{n:'The Echo',ic:'🗣',major:true,threat:3,d:'Listens. Learns voices. Uses them. It only moves when nobody is looking at it.'},
  crawler:{n:'The Crawler',ic:'🕷',major:true,threat:3,d:'Lives in the vents. Hates crowds. Loves loners.'},
  lighteater:{n:'The Light Eater',ic:'🌑',major:true,threat:2,d:'Comes for the light. Turn it off. Good luck.'},
  window:{n:'The Man in the Window',ic:'🪟',major:true,threat:2,d:'Never attacks. Almost never.'},

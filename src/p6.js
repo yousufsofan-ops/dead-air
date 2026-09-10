@@ -68,7 +68,7 @@ function hostAct(id,a){const av=G.avatars[id];
     case 'grab':{const o=G.objById[a.id];if(!o||o.carrier||o.held!==null&&o.held!==id)return;o.held=id;o.lastHolder=id;o.sleep=false;o.mesh.visible=!a.pocket;if(av)av.hold=a.pocket?av.hold:o.id;bcast({t:'ev',k:'held',id:o.id,pid:id,pocket:!!a.pocket});if(o.special==='tag')objectiveProgress('researcher');break;}
     case 'grab2':{const o=G.objById[a.id];if(!o)return;if(o.holders.indexOf(id)<0)o.holders.push(id);o.sleep=false;bcast({t:'ev',k:'holders',id:o.id,h:o.holders});break;}
     case 'drop':{const o=G.objById[a.id];if(!o)return;o.held=null;o.holders=o.holders.filter(h=>h!==id);o.sleep=false;o.p.set(a.p[0],a.p[1],a.p[2]);o.v.set(a.v[0],a.v[1],a.v[2]);if(a.spin)o.spin=a.spin;o.mesh.visible=true;o.k=av?av.k:o.k;bcast({t:'ev',k:'held',id:o.id,pid:null,p:a.p,v:a.v,spin:a.spin||0},null);break;}
-    case 'door':{const d=G.doors[a.id];if(!d||d.locked&&!a.force)return;d.target=a.o;Aud.door(new THREE.Vector3(d.x,layerY(d.k)+1,d.z));emitNoiseHost(d.x,layerY(d.k),d.z,d.k,0.2,'door',id);bcast({t:'ev',k:'door',id:d.id,o:a.o});break;}
+    case 'door':{const d=G.doors[a.id];if(!d||d.locked&&!a.force)return;d.target=a.o;if(a.o===0)noteDoorClosed(id,d);Aud.door(new THREE.Vector3(d.x,layerY(d.k)+1,d.z));emitNoiseHost(d.x,layerY(d.k),d.z,d.k,0.2,'door',id);bcast({t:'ev',k:'door',id:d.id,o:a.o});break;}
     case 'unlock':{const d=G.doors[a.id];if(d){d.locked=false;d.target=1;G.director.aggro+=0.5;bcast({t:'ev',k:'unlock',id:d.id});}break;}
     case 'noise':emitNoiseHost(a.p[0],a.p[1],a.p[2],a.l,a.loud,a.kind,id);break;
     case 'doc':{const dd=G.docs.find(x=>x.id===a.id);if(dd){dd.read=true;if(dd.mesh)dd.mesh.visible=false;bcast({t:'ev',k:'doc',id:a.id});G.mission.docsRead=(G.mission.docsRead||0)+1;}break;}

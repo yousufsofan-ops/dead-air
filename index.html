@@ -530,7 +530,7 @@ const EVENT_DEFS=[
  {id:'intern',w:0.4,minStage:1,d:'The Intern'},
 ];
 const CREATURES={
- echo:{n:'The Echo',ic:'🗣',major:true,threat:3,d:'Listens. Learns voices. Uses them.'},
+ echo:{n:'The Echo',ic:'🗣',major:true,threat:3,d:'Listens. Learns voices. Uses them. It only moves when nobody is looking at it.'},
  crawler:{n:'The Crawler',ic:'🕷',major:true,threat:3,d:'Lives in the vents. Hates crowds. Loves loners.'},
  lighteater:{n:'The Light Eater',ic:'🌑',major:true,threat:2,d:'Comes for the light. Turn it off. Good luck.'},
  window:{n:'The Man in the Window',ic:'🪟',major:true,threat:2,d:'Never attacks. Almost never.'},
@@ -1015,7 +1015,7 @@ function surfaceAt(k,x,z){const c=cellAt(G.map,k,x,z);if(c===T_YARD)return 'grav
 const _signTex={};
 function stairSign(txt,color,x,y,z){let tex=_signTex[txt];if(!tex){const c=document.createElement('canvas');c.width=256;c.height=96;const g=c.getContext('2d');g.fillStyle='rgba(6,10,8,0.85)';g.fillRect(4,10,248,76);g.strokeStyle=color;g.lineWidth=4;g.strokeRect(4,10,248,76);g.font='bold 44px Segoe UI, sans-serif';g.textAlign='center';g.fillStyle=color;g.shadowColor=color;g.shadowBlur=14;g.fillText(txt,128,64);tex=new THREE.CanvasTexture(c);_signTex[txt]=tex;}
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,fog:false}));sp.scale.set(1.9,0.72,1);sp.position.set(x,y,z);sp.renderOrder=50;sp.userData.own=true;return sp;}
-function clearScene(){if(G.scene){G.scene.traverse(o=>{if(o.geometry&&o.userData.own)o.geometry.dispose();});}G.composer=null;G.lightning=null;G.crLights=[];G.scene=new THREE.Scene();G.objs=[];G.objById={};G.creatures=[];G.doors={};G.lights=[];G.lightPool=[];G.props=[];G.docs=[];G.avatars={};G.pings=[];G.markers=[];G.flareObjs=[];G.lamps={};G.elevator=null;}
+function clearScene(){G.ghosts=[];if(G.scene){G.scene.traverse(o=>{if(o.geometry&&o.userData.own)o.geometry.dispose();});}G.composer=null;G.lightning=null;G.crLights=[];G.scene=new THREE.Scene();G.objs=[];G.objById={};G.creatures=[];G.doors={};G.lights=[];G.lightPool=[];G.props=[];G.docs=[];G.avatars={};G.pings=[];G.markers=[];G.flareObjs=[];G.lamps={};G.elevator=null;}
 function buildWorld(map){
   clearScene();const sc=G.scene,pal=map.loc.pal;
   const fogC=new THREE.Color(pal.ceil).multiplyScalar(0.3).lerp(new THREE.Color(0x04070c),0.55);sc.background=fogC;sc.fog=new THREE.FogExp2(fogC.getHex(),(S.set.gfx>=1?0.026:0.038)*(map.loc.fog||1));
@@ -1202,7 +1202,7 @@ function updatePlayer(dt){
   /* out of bounds rescue */{const m=G.map;if(m&&!P.dead){const top=layerY(0)+WALL_H+0.6,bot=layerY(m.L-1)-3;if(P.pos.y>top||P.pos.y<bot){if(P.pos.y>top){P.k=0;}P.pos.y=layerY(P.k);P.vel.set(0,0,0);unstick();sysMsg('You left the map — putting you back on the floor.','warn',5);}}}
   /* stuck watchdog */if(!P.stuckRef)P.stuckRef=P.pos.clone();if(il>0&&P.onGround&&!P.dead&&!P.downed&&!(P.grabbedT>G.t)&&!P.inVan){if(P.pos.distanceTo(P.stuckRef)>0.35){P.stuckT=0;P.stuckRef.copy(P.pos);}else{P.stuckT=(P.stuckT||0)+dt;if(P.stuckT>2.2&&!(P.stuckMsgT>G.t-8)){P.stuckMsgT=G.t;sysMsg('You are pushing against something and not moving. Press J (or tap UNSTICK) to hop to the nearest open floor.','warn',7,{label:'UNSTICK',fn:unstick});}}}else{P.stuckT=0;P.stuckRef.copy(P.pos);}
   /* camera juice */if(P.landT>0){P.landT-=dt;cam.position.y-=Math.sin(P.landT/0.3*Math.PI)*0.09;}if(P.kick>0){P.kick-=dt*2.5;cam.rotation.z+=Math.sin(P.kick*9)*0.02*P.kick*S.set.shake;cam.rotation.x-=P.kick*0.02*S.set.shake;}
-  const wantFov=S.set.fov+((P.sprint&&il>0&&P.stamina>0.02)?7:0)+(P.grabbedT&&G.t<P.grabbedT?-6:0);if(Math.abs(cam.fov-wantFov)>0.05){cam.fov=lerp(cam.fov,wantFov,1-Math.exp(-6*dt));cam.updateProjectionMatrix();}
+  const wantFov=S.set.fov+((P.sprint&&il>0&&P.stamina>0.02)?7:0)+(P.grabbedT&&G.t<P.grabbedT?-6:0)+(G.fx.danger||0)*7;if(Math.abs(cam.fov-wantFov)>0.05){cam.fov=lerp(cam.fov,wantFov,1-Math.exp(-6*dt));cam.updateProjectionMatrix();}
   if(G.vm){G.vm.visible=!P.dead;const carry=P.hands&&G.objById[P.hands];P.carryF=lerp(P.carryF||0,carry?1:0,1-Math.exp(-9*dt));P.grabAnim=(P.grabAnim||0)*Math.exp(-5*dt);const dip=Math.sin(Math.min(1,P.grabAnim)*Math.PI)*0.05;const vmx=clamp(0.17*cam.aspect,0.13,0.3);G.vm.position.set(vmx+(P.swayX||0)+P.carryF*0.12,-0.24+bobY*1.6+(P.swayY||0)-(P.crouch?0.03:0)-P.carryF*0.06-dip,-0.42);G.vm.rotation.set(0.06+(P.swayY||0)*1.5,-0.18-(P.swayX||0)*2,0.12-(P.swayX||0)*2);if(G.vmLens)G.vmLens.color.setHex(P.flash&&P.batt>0?0xfff2c8:0x332b20);}
   /* third person: over-the-shoulder spring arm */if(S.set.tp&&!P.dead){const fx=-Math.sin(P.yaw)*Math.cos(P.pitch),fy=Math.sin(P.pitch),fz=-Math.cos(P.yaw)*Math.cos(P.pitch);const rx=Math.cos(P.yaw),rz=-Math.sin(P.yaw);
     /* shoulder: prefer right; swap to left when the right side has no room */const hx=P.pos.x,hz=P.pos.z;const roomR=losClear(G.map,P.k,hx,hz,hx+rx*0.7,hz+rz*0.7),roomL=losClear(G.map,P.k,hx,hz,hx-rx*0.7,hz-rz*0.7);const wantSide=(roomR||!roomL)?1:-1;P.tpSide=P.camSnap?wantSide:lerp(P.tpSide===undefined?1:P.tpSide,wantSide,1-Math.exp(-5*dt));
@@ -1289,7 +1289,7 @@ function toggleDoor(d){if(d.blast){if(d.open>0.5)return;if(d.locked){toast('⛔ 
   if(d.locked){if(hasKey()){d.locked=false;toast('🗝 The red key turns. Something far away notices.');if(mpHost())G.director.aggro+=0.5;setDoor(d,1);if(mpHost())bcast({t:'ev',k:'unlock',id:d.id});else sendAct({k:'unlock',id:d.id});}else{toast('🔴 Locked. It wants a red key.');Aud.ui('bad');}return;}
   const heavy=P.hands&&G.objById[P.hands]&&G.objById[P.hands].sz>=2;if(heavy&&Math.random()<0.15){toast('🚪 Can\'t get the door with this thing…');Aud.ui('bad');emitNoise(P.pos,P.k,0.4,'door');return;}
   setDoor(d,d.target>0.5?0:1);G.mission.stats.doors++;S.stats.doors++;pstat(P.id,'doors',1);}
-function setDoor(d,target,slam){d.target=target;const p=new THREE.Vector3(d.x,layerY(d.k)+1,d.z);Aud.door(p,slam);if(slam)doorSlamFeel(d);emitNoise(p,d.k,slam?0.8:0.2,'door');if(mpHost())bcast({t:'ev',k:'door',id:d.id,o:target,slam:!!slam});else if(MP.on)sendAct({k:'door',id:d.id,o:target});}
+function setDoor(d,target,slam){d.target=target;if(target===0&&mpHost())noteDoorClosed(P.id,d);const p=new THREE.Vector3(d.x,layerY(d.k)+1,d.z);Aud.door(p,slam);if(slam)doorSlamFeel(d);emitNoise(p,d.k,slam?0.8:0.2,'door');if(mpHost())bcast({t:'ev',k:'door',id:d.id,o:target,slam:!!slam});else if(MP.on)sendAct({k:'door',id:d.id,o:target});}
 function doorSlamFeel(d){if(!d||d.k!==P.k)return;const dd=dist2(P.pos.x,P.pos.z,d.x,d.z);if(dd<8)G.fx.shake+=0.4*(1-dd/8);}
 function updateDoors(dt){for(const id in G.doors){const d=G.doors[id];const sp=d.blast?0.6:(d.slamming?9:2.6);d.open=lerp(d.open,d.target,1-Math.exp(-sp*dt));if(Math.abs(d.open-d.target)<0.01)d.open=d.target;
   if(d.blast){if(d.mesh)d.mesh.position.y=d.open*2.55;continue;}
@@ -1408,6 +1408,26 @@ function removeCreature(c){G.creatures=G.creatures.filter(x=>x!==c);c.rig.root.t
 function beamOnCreature(c,pl,range){if(!pl.flash||pl.k!==c.k||pl.dead)return false;const d=c.pos.distanceTo(pl.pos);if(d>range||d<0.3)return false;let yaw,pitch;if(pl.local){yaw=P.yaw;pitch=P.pitch;}else{const a=G.avatars[pl.id];if(!a)return false;yaw=a.yaw;pitch=(a.net&&a.net.pitch)||0;}
   const fx=-Math.sin(yaw)*Math.cos(pitch),fy=Math.sin(pitch),fz=-Math.cos(yaw)*Math.cos(pitch);const tx=c.pos.x-pl.pos.x,ty=(c.pos.y+0.5)-(pl.pos.y+1.5),tz=c.pos.z-pl.pos.z;const dot=(fx*tx+fy*ty+fz*tz)/d;if(dot<0.93)return false;return losClear(G.map,c.k,pl.pos.x,pl.pos.z,c.pos.x,c.pos.z);}
 function breakObjHost(o){if(typeof breakObj==='function')breakObj(o);}
+/* ===== AI runtime: blackboard, behavior tree, utility curves (shared by the director and creatures) ===== */
+const BT={S:1,F:0,R:2};
+class Blackboard{constructor(){this.d={};}get(k,def){const v=this.d[k];return v===undefined?def:v;}set(k,v){this.d[k]=v;return v;}}
+function btSeq(...ch){return {ch,i:0,tick(bb,dt){for(;this.i<this.ch.length;this.i++){const s=this.ch[this.i].tick(bb,dt);if(s===BT.R)return BT.R;if(s===BT.F){this.i=0;return BT.F;}}this.i=0;return BT.S;},reset(){this.i=0;for(const c of this.ch)if(c.reset)c.reset();}};}
+function btSel(...ch){return {ch,i:0,tick(bb,dt){for(;this.i<this.ch.length;this.i++){const s=this.ch[this.i].tick(bb,dt);if(s===BT.R)return BT.R;if(s===BT.S){this.i=0;return BT.S;}}this.i=0;return BT.F;},reset(){this.i=0;for(const c of this.ch)if(c.reset)c.reset();}};}
+function btCond(fn){return {tick(bb,dt){return fn(bb,dt)?BT.S:BT.F;}};}
+function btAct(fn){return {tick(bb,dt){const r=fn(bb,dt);return r===undefined?BT.S:r;}};}
+function btCooldown(sec,n){let last=-1e9;return {tick(bb,dt){if(G.t-last<sec)return BT.F;const s=n.tick(bb,dt);if(s===BT.S)last=G.t;return s;},reset(){if(n.reset)n.reset();}};}
+const U={lin:(v,a,b)=>clamp((v-a)/(b-a),0,1),sig:(x,k,mid)=>1/(1+Math.exp(-k*(x-mid))),quad:x=>x*x,inv:x=>1-x,
+  /* product with compensation: one weak consideration dampens, never vetoes */
+  cprod(arr){let p=1;const n=arr.length;for(const v of arr){const c=clamp(v,0,1);const m=(1-c)*(1-1/n);p*=c+m*c;}return p;},
+  pick(actions,bb,current){let best=null,bs=-1,scores={};for(const a of actions){let s=a.score(bb);if(!(s>0))s=0;if(current&&a.id===current)s*=1.12;scores[a.id]=s;if(s>bs){bs=s;best=a;}}return {a:best,s:bs,scores};}};
+/* does a player have this creature in the middle of their view (no flashlight needed)? */
+function lookingAt(c,pl,range,cone){if(pl.k!==c.k||pl.dead)return false;const d=c.pos.distanceTo(pl.pos);if(d>(range||20)||d<0.2)return false;let yaw,pitch;if(pl.local){yaw=P.yaw;pitch=P.pitch;}else{const a=G.avatars[pl.id];if(!a)return false;yaw=a.yaw;pitch=(a.net&&a.net.pitch)||0;}
+  const fx=-Math.sin(yaw)*Math.cos(pitch),fy=Math.sin(pitch),fz=-Math.cos(yaw)*Math.cos(pitch);const tx=c.pos.x-pl.pos.x,ty=(c.pos.y+0.8)-(pl.pos.y+1.5),tz=c.pos.z-pl.pos.z;const dot=(fx*tx+fy*ty+fz*tz)/d;if(dot<(cone||0.86))return false;return losClear(G.map,c.k,pl.pos.x,pl.pos.z,c.pos.x,c.pos.z);}
+function observed(c,range){for(const p of alivePlayers()){if(lookingAt(c,p,range||22,0.84))return p;}return null;}
+/* utility target choice for hunters: near, isolated, loud, lit, hurt, carrying */
+function isolation(pl){const ps=alivePlayers();if(ps.length<2)return 0.5;let nd=1e9;for(const q of ps){if(q.id===pl.id)continue;const d=q.k===pl.k?q.pos.distanceTo(pl.pos):40;if(d<nd)nd=d;}return U.lin(nd,4,26);}
+function pickTarget(c,cands){if(!cands.length)return null;let best=null,bs=-1;for(const p of cands){const d=c.pos.distanceTo(p.pos);const lit=(p.flash||roomLit(p.k,p.pos.x,p.pos.z))?1:0.45;const hp=p.local?U.inv(U.lin(P.hp,10,100))*0.5+0.5:0.7;const carrying=(p.local?(P.hands?1:0):(G.avatars[p.id]&&G.avatars[p.id].hold?1:0))*0.3+0.7;
+    const s=U.cprod([U.inv(U.lin(d,2,30)),0.45+0.55*isolation(p),0.5+0.5*clamp(p.loud||0,0,1),lit,hp,carrying]);if(s>bs){bs=s;best=p;}}return best;}
 function canSee(c,pl,range){if(pl.k!==c.k||pl.dead)return false;const d=c.pos.distanceTo(pl.pos);let r=range||CR_CFG[c.kind].sight;if(!pl.flash&&!roomLit(pl.k,pl.pos.x,pl.pos.z))r*=0.4;if(pl.crouch)r*=0.7;if(d>r)return false;return losClear(G.map,c.k,c.pos.x,c.pos.z,pl.pos.x,pl.pos.z);}
 function roomLit(k,x,z){for(const l of G.lights){if(l.k!==k||!l.on)continue;if(dist2(l.x,l.z,x,z)<7)return true;}for(const f of G.flareObjs){if(f.k===k&&dist2(f.p.x,f.p.z,x,z)<6)return true;}return false;}
 function nearestPlayer(c,filter){let best=null,bd=1e9;for(const p of allPlayers()){if(p.dead||p.inVan)continue;if(filter&&!filter(p))continue;const d=p.pos.distanceTo(c.pos)+(p.k!==c.k?LAYER_GAP*3:0);if(d<bd){bd=d;best=p;}}return best?{p:best,d:bd}:null;}
@@ -1463,7 +1483,9 @@ function creatureDoors(c,hx,hz,speed,dt){
 function setDoorHost(d,o,slam){d.target=o;const p=new THREE.Vector3(d.x,layerY(d.k)+1,d.z);Aud.door(p,slam);if(slam)doorSlamFeel(d);if(MP.on)bcast({t:'ev',k:'door',id:d.id,o,slam:!!slam});}
 function hostDamage(pid,amt,src){if(pid===P.id){hurt(amt,src);return;}if(MP.on)sendTo(pid,{t:'ev',k:'damage',amt,src});}
 function hostEvent(pid,ev){if(pid===P.id)applyLocalEvent(ev);else if(MP.on)sendTo(pid,{t:'ev',k:'local',ev});}
-function applyLocalEvent(ev){if(ev.k==='blind'){P.blind=8;P.slow=8;toast('🫧 Spores! You can\'t see!');Aud.creature('drifter',P.pos,2);}else if(ev.k==='drain'){P.batt=0;toast('🔦 It ate your light.');G.fx.flicker=1;}else if(ev.k==='scare'){Aud.sting('scare');G.fx.shake+=2.5;G.fx.glitch=1.2;}else if(ev.k==='ach'){ach(ev.id);}else if(ev.k==='flicker'){G.fx.flicker=ev.t||6;}else if(ev.k==='grabbed'){P.grabbedT=G.t+(ev.t||2.5);toast('🪢 IT HAS YOU — someone throw something at it!');Aud.sting('scare');G.fx.shake+=2;}else if(ev.k==='released'){P.grabbedT=0;toast('🪢 It let go.');}else if(ev.k==='bitten'){dropHands(true);P.kick=1;G.fx.shake+=1.5;toast('🧰 IT BIT YOU — that is not a strongbox!');}else if(ev.k==='swarmed'){P.blind=Math.max(P.blind,1.3);P.batt=Math.max(0,P.batt-0.05);if(!P.swarmToast||G.t-P.swarmToast>6){P.swarmToast=G.t;toast('🪰 They are in your eyes — flashlight OFF (F) and walk away!');}}else if(ev.k==='toast'){toast(ev.s,'big');}else if(ev.k==='radiolure'){Aud.radioStatic(2,0.3);setTimeout(()=>{Aud.radioClick();if(VOICE.clips&&VOICE.clips.length)echoPlayClip(null,true,0.9);else Aud.play('vo_radio_1',null,0.9,{noVar:true,lp:2800,dest:Aud.voiceBus});subtitle('[a teammate on the radio, calling you the wrong way]');},900);$('radio').classList.add('rx');setTimeout(()=>$('radio').classList.remove('rx'),4000);}else if(ev.k==='tripped'){dropHands(true);P.slow=5;P.kick=1;P.landT=0.3;G.fx.shake+=2;toast('🕳 THE FLOOR HAS YOUR LEG — stop sprinting!');Aud.sting('scare');}}
+function applyLocalEvent(ev){if(ev.k==='whisper'){const fx=-Math.sin(P.yaw),fz=-Math.cos(P.yaw);const p=new THREE.Vector3(P.pos.x-fx*0.5,P.pos.y+1.5,P.pos.z-fz*0.5);if(!Aud.play('whisper_'+(ev.i||1),p,1.0,{noVar:true}))Aud.creature('echo',p,1);setTimeout(()=>Aud.play('breath_close',p,0.5),900);G.fx.shake+=0.25;G.fx.glitch=Math.max(G.fx.glitch,0.35);if(S.set.subs)subtitle('[...right behind you]');Aud.duck(0.7,2.5);return;}
+  if(ev.k==='doorbehind'){if(S.set.subs)subtitle('[the door you closed just opened]');G.fx.shake+=0.15;return;}
+  if(ev.k==='blind'){P.blind=8;P.slow=8;toast('🫧 Spores! You can\'t see!');Aud.creature('drifter',P.pos,2);}else if(ev.k==='drain'){P.batt=0;toast('🔦 It ate your light.');G.fx.flicker=1;}else if(ev.k==='scare'){Aud.sting('scare');G.fx.shake+=2.5;G.fx.glitch=1.2;}else if(ev.k==='ach'){ach(ev.id);}else if(ev.k==='flicker'){G.fx.flicker=ev.t||6;}else if(ev.k==='grabbed'){P.grabbedT=G.t+(ev.t||2.5);toast('🪢 IT HAS YOU — someone throw something at it!');Aud.sting('scare');G.fx.shake+=2;}else if(ev.k==='released'){P.grabbedT=0;toast('🪢 It let go.');}else if(ev.k==='bitten'){dropHands(true);P.kick=1;G.fx.shake+=1.5;toast('🧰 IT BIT YOU — that is not a strongbox!');}else if(ev.k==='swarmed'){P.blind=Math.max(P.blind,1.3);P.batt=Math.max(0,P.batt-0.05);if(!P.swarmToast||G.t-P.swarmToast>6){P.swarmToast=G.t;toast('🪰 They are in your eyes — flashlight OFF (F) and walk away!');}}else if(ev.k==='toast'){toast(ev.s,'big');}else if(ev.k==='radiolure'){Aud.radioStatic(2,0.3);setTimeout(()=>{Aud.radioClick();if(VOICE.clips&&VOICE.clips.length)echoPlayClip(null,true,0.9);else Aud.play('vo_radio_1',null,0.9,{noVar:true,lp:2800,dest:Aud.voiceBus});subtitle('[a teammate on the radio, calling you the wrong way]');},900);$('radio').classList.add('rx');setTimeout(()=>$('radio').classList.remove('rx'),4000);}else if(ev.k==='tripped'){dropHands(true);P.slow=5;P.kick=1;P.landT=0.3;G.fx.shake+=2;toast('🕳 THE FLOOR HAS YOUR LEG — stop sprinting!');Aud.sting('scare');}}
 function creatureAttackNoted(c){G.director.calmUntil=G.t+40+Math.random()*50;G.mission.stats.encounters++;const t=G.t;G.mission.lastMajor=t;if(!G.mission.metKinds[c.kind]){G.mission.metKinds[c.kind]=true;S.stats.encounters[c.kind]=(S.stats.encounters[c.kind]||0)+1;}}
 function updateCreaturesHost(dt){if(G.mission&&G.mission.zero)sigTick(dt);const calm=G.t<G.director.calmUntil;const agg=(G.mission.diff.creat||1)*(1+G.director.aggro*0.5)*(G.mission.weekly==='angry'?1.5:1)*(G.stage>=3?1.25:1);const hearMul=(calm?0.5:1)*agg;
   /* process noises */const fresh=NOISES.filter(n=>G.t-n.t<0.5&&!n.done);for(const n of fresh){n.done=true;for(const c of G.creatures){const cfg=CR_CFG[c.kind];if(!cfg.hear)continue;if(c.kind==='crawler'&&c.state==='hidden')continue;const same=n.k===c.k;const d=same?dist2(c.pos.x,c.pos.z,n.x,n.z):Math.hypot(n.x-c.pos.x,n.z-c.pos.z,(n.y-c.pos.y)*2);const range=n.loud*cfg.hear*hearMul*(same?1:0.35);if(d<range){c.lastHeard={x:n.x,z:n.z,k:n.k,t:G.t,loud:n.loud,pid:n.pid,kind:n.kind};c.alert=Math.min(1,c.alert+n.loud);}}}
@@ -1474,12 +1496,12 @@ function updateCreaturesHost(dt){if(G.mission&&G.mission.zero)sigTick(dt);const 
       if(c.state==='wander'){if(!c.wp||moveTo(c,c.wp.x,c.wp.z,c.wp.k,spd,dt)){c.wp=randomWalkCell(G.map,Math.random()<0.7?c.k:ri(Math.random,0,G.map.L-1));}c.anim='walk';
         if(c.lastHeard&&G.t-c.lastHeard.t<1&&c.lastHeard.loud>0.2){c.state='listen';c.timer=2.2;c.anim='listen';}}
       else if(c.state==='listen'){c.anim='listen';if(c.timer<=0){c.state='stalk';c.anim='walk';}}
-      else if(c.state==='stalk'){const h=c.lastHeard;if(!h||moveTo(c,h.x,h.z,h.k,spd*1.9,dt)){c.state='wander';c.wp=null;}c.anim='walk';}
+      else if(c.state==='stalk'){const h=c.lastHeard;const ob=observed(c,22);if(ob){c.anim='idle';c.frozenT=(c.frozenT||0)+dt;if(c.frozenT>0.6&&!G.mission.angelHint&&ob.local){G.mission.angelHint=true;hostEvent(ob.id,{k:'toast',s:'👁 It stopped when you looked. It will not stay stopped when you look away.'});}if(Math.random()<dt*0.4){if(MP.on)bcast({t:'ev',k:'sfx',kind:'echo',p:[c.pos.x,c.pos.y+1,c.pos.z]});Aud.creature('echo',c.pos,0.5);}}else{c.frozenT=0;if(!h||moveTo(c,h.x,h.z,h.k,spd*2.6,dt)){c.state='wander';c.wp=null;}c.anim='walk';}}
       else if(c.state==='hunt'){const pl=allPlayers().find(p=>p.id===c.target);if(!pl||pl.dead||pl.inVan||(pl.k!==c.k&&!c.path)){c.state='wander';c.target=null;break;}moveTo(c,pl.pos.x,pl.pos.z,pl.k,hunt,dt);c.anim='walk';if(canSee(c,pl,30))c.lastSeen=G.t;else if(G.t-c.lastSeen>8){c.state='wander';c.target=null;}
         const d=c.pos.distanceTo(pl.pos);if(d<reach('echo')&&c.cool<=0){c.state='attack';c.timer=0.45;c.anim='lunge';c.victim=pl.id;}}
       else if(c.state==='attack'){c.anim='lunge';if(c.timer<=0){const pl=allPlayers().find(p=>p.id===c.victim);if(pl&&pl.pos.distanceTo(c.pos)<reach('echo')+0.6&&pl.k===c.k){hostDamage(pl.id,55,'echo');creatureAttackNoted(c);}c.state='retreat';c.timer=5;c.cool=5;c.wp=randomWalkCell(G.map,c.k);}}
       else if(c.state==='retreat'){c.anim='walk';if(!c.wp||moveTo(c,c.wp.x,c.wp.z,c.wp.k,spd*2.2,dt))c.wp=randomWalkCell(G.map,c.k);if(c.timer<=0)c.state='wander';}
-      if(c.state!=='attack'&&c.state!=='retreat'){for(const p of alivePlayers()){if(p.loud>0.3&&canSee(c,p)){c.state='hunt';c.target=p.id;c.lastSeen=G.t;G.mission.echoHunted=true;break;}}}
+      if(c.state!=='attack'&&c.state!=='retreat'){const seen=alivePlayers().filter(p=>p.loud>0.3&&canSee(c,p));const tp=pickTarget(c,seen);if(tp){c.state='hunt';c.target=tp.id;c.lastSeen=G.t;G.mission.echoHunted=true;}}
       c.mimicT-=dt;if(c.mimicT<=0){c.mimicT=25+Math.random()*25;const np=nearestPlayer(c);if(np&&np.d<28){const radio=Math.random()<0.3;if(MP.on)bcast({t:'ev',k:'mimic',p:[c.pos.x,c.pos.y,c.pos.z],l:c.k,radio});echoPlayClip(c.pos.clone(),radio,1);}}
       break;}
     case 'crawler':{
@@ -1546,7 +1568,7 @@ function updateCreaturesHost(dt){if(G.mission&&G.mission.zero)sigTick(dt);const 
         if(c.lastHeard&&c.lastHeard.kind==='impact'&&G.t-c.lastHeard.t<0.5&&c.lastHeard.loud>0.5&&Math.random()<0.5){c.state='investigate';c.target=null;break;}
         if(d<reach('hound')&&pl.k===c.k&&c.cool<=0){c.cool=3;c.anim='bite';c.rig.play('bite',0.1,true);hostDamage(pl.id,16,'hound');creatureAttackNoted(c);if(MP.on)bcast({t:'ev',k:'sfx',kind:'hound',p:[c.pos.x,c.pos.y,c.pos.z]});Aud.creature('hound',c.pos,1.2);c.state='recoil';c.timer=1.4;
           if(!G.mission.houndBiteHint){G.mission.houndBiteHint=true;hostEvent(pl.id,{k:'toast',s:'🐕 It bites and backs off. That pause is your window: run, throw something, or put your light in its eyes.'});}}}
-      if(c.state!=='chase'&&c.state!=='recoil'&&c.state!=='circle'&&c.state!=='cower'&&c.state!=='fetch'){for(const p of alivePlayers()){if(canSee(c,p)){c.state='chase';c.target=p.id;c.lastSeen=G.t;if(MP.on)bcast({t:'ev',k:'sfx',kind:'hound_bark',p:[c.pos.x,c.pos.y,c.pos.z]});Aud.creature('hound_bark',c.pos,1.4);break;}}}
+      if(c.state!=='chase'&&c.state!=='recoil'&&c.state!=='circle'&&c.state!=='cower'&&c.state!=='fetch'){const seen=alivePlayers().filter(p=>canSee(c,p));const tp=pickTarget(c,seen);if(tp){c.state='chase';c.target=tp.id;c.lastSeen=G.t;if(MP.on)bcast({t:'ev',k:'sfx',kind:'hound_bark',p:[c.pos.x,c.pos.y,c.pos.z]});Aud.creature('hound_bark',c.pos,1.4);}}
       c.prevX=c.pos.x;c.prevZ=c.pos.z;break;}
     case 'stack':{
       if(c.state==='hidden'){c.anim='idle';}
@@ -1681,13 +1703,53 @@ function updateLights(dt){updateFloorCulling();if(frame%2===0)updateGlowPool();c
   /* remote flashlights already on avatars */
 }
 /* ================= DIRECTOR / EVENTS / STAGES ================= */
-function initDirector(){G.director={aggro:0,calmUntil:0,nextEvent:25+Math.random()*20,seen:{},tick:0,distantT:20};}
+function initDirector(){G.director={aggro:0,calmUntil:0,nextEvent:25+Math.random()*20,seen:{},tension:0,used:{},closed:[],pending:[],decideT:0,lastEventT:0,lastBigT:0,bb:new Blackboard(),tick:0,distantT:20};}
+/* the director scores every scare it could run right now (utility AI) on a calm → dread → spike → relief curve */
+const SCARE_MENU=[
+  {id:'distant',   min:1,big:0,cd:14, fit:bb=>U.cprod([0.6+0.4*U.inv(bb.get('tension')),0.5+0.5*U.inv(bb.get('danger'))])},
+  {id:'doorslam',  min:1,big:0,cd:40, fit:bb=>U.cprod([bb.get('dread'),0.4+0.6*bb.get('dark'),U.inv(bb.get('danger'))])},
+  {id:'flicker',   min:1,big:0,cd:45, fit:bb=>U.cprod([bb.get('dread'),bb.get('flash')])},
+  {id:'objmove',   min:1,big:0,cd:50, fit:bb=>U.cprod([bb.get('dread'),0.5+0.5*bb.get('dark'),U.inv(bb.get('danger'))])},
+  {id:'peripheral',min:1,big:0,cd:70, fit:bb=>U.cprod([bb.get('dread'),bb.get('dark'),U.inv(bb.get('danger')),0.5+0.5*bb.get('iso')])},
+  {id:'doorbehind',min:1,big:0,cd:60, fit:bb=>U.cprod([bb.get('dread'),bb.get('closedDoor'),U.inv(bb.get('danger'))])},
+  {id:'whisper',   min:1,big:0,cd:200,fit:bb=>U.cprod([bb.get('dread'),bb.get('dark'),bb.get('iso'),U.inv(bb.get('danger'))])},
+  {id:'radio',     min:1,big:0,cd:60, fit:bb=>U.cprod([0.5+0.5*bb.get('dread'),bb.get('radio')])},
+  {id:'ownvoice',  min:2,big:0,cd:120,fit:bb=>U.cprod([bb.get('dread'),bb.get('iso'),bb.get('voice')])},
+  {id:'goldroom',  min:1,big:0,cd:150,fit:bb=>U.cprod([bb.get('relief'),0.6])},
+  {id:'mapglitch', min:2,big:0,cd:90, fit:bb=>U.cprod([bb.get('dread'),0.5])},
+  {id:'fakeout',   min:1,big:1,cd:999,fit:bb=>U.cprod([bb.get('spike'),bb.get('dark'),U.inv(bb.get('danger')),0.5+0.5*bb.get('iso')])},
+  {id:'lightsout', min:2,big:1,cd:150,fit:bb=>U.cprod([Math.max(bb.get('spike'),bb.get('hunt')),bb.get('flash')*0.5+0.5])},
+  {id:'creature',  min:2,big:1,cd:120,fit:bb=>U.cprod([bb.get('spike'),U.inv(bb.get('danger')),0.5+0.5*bb.get('deep')])},
+  {id:'lockdown',  min:2,big:1,cd:200,fit:bb=>U.cprod([bb.get('spike'),bb.get('deep')])},
+  {id:'alarm',     min:3,big:1,cd:200,fit:bb=>U.cprod([bb.get('spike'),0.5])},
+  {id:'lowg',      min:2,big:1,cd:300,fit:bb=>U.cprod([bb.get('relief'),0.4])},
+  {id:'fakeexit',  min:3,big:1,cd:999,fit:bb=>U.cprod([bb.get('spike'),bb.get('deep')])},
+  {id:'elevator',  min:2,big:1,cd:200,fit:bb=>U.cprod([bb.get('spike'),bb.get('elev')])},
+  {id:'intern',    min:1,big:0,cd:999,fit:bb=>U.cprod([bb.get('relief'),0.5])},
+];
+function directorFacts(D){const bb=D.bb;const M=G.mission;const pls=alivePlayers().filter(p=>!p.inVan);if(!pls.length)return null;
+  /* the most vulnerable player is the one the site works on */let tp=null,bs=-1;for(const p of pls){const dark=(!p.flash&&!roomLit(p.k,p.pos.x,p.pos.z))?1:0.3;const s=U.cprod([0.4+0.6*isolation(p),dark,0.5+0.5*(p.k/Math.max(1,G.map.L-1)),p.local?0.6+0.4*U.inv(U.lin(P.hp,10,100)):0.7]);if(s>bs){bs=s;tp=p;}}
+  const sinceBig=G.t-(D.lastBigT||M.startT||0);const sinceAny=G.t-(D.lastEventT||0);
+  bb.set('tp',tp);bb.set('danger',G.fx.danger||0);bb.set('tension',D.tension);
+  bb.set('dark',(!tp.flash&&!roomLit(tp.k,tp.pos.x,tp.pos.z))?1:0.35);bb.set('iso',isolation(tp));bb.set('deep',U.lin(tp.k,0,Math.max(1,G.map.L-1)));
+  bb.set('flash',tp.flash?1:0.2);bb.set('radio',tp.local?(P.radio.on?1:0.4):0.6);bb.set('voice',(VOICE.clips&&VOICE.clips.length)?1:0.2);bb.set('elev',G.map.elev?1:0);
+  /* pacing curve: relief right after a spike, dread as the gap grows, spike once the gap is long and the player has relaxed */
+  bb.set('relief',U.inv(U.lin(sinceBig,0,25)));bb.set('dread',U.cprod([U.lin(sinceBig,15,50),U.inv(U.lin(sinceBig,60,140))*0.5+0.5]));bb.set('spike',U.cprod([U.lin(sinceBig,60,120),U.inv(U.lin(D.tension,0.2,0.7))*0.4+0.6]));
+  bb.set('hunt',G.fx.danger>0.55?1:0);
+  const cds=D.closed.filter(c=>c.pid===tp.id&&G.t-c.t<75&&G.doors[c.id]&&G.doors[c.id].open<0.5&&G.doors[c.id].k===tp.k);let cd=0;for(const c of cds){const d=G.doors[c.id];const dist=dist2(d.x,d.z,tp.pos.x,tp.pos.z);if(dist>4&&dist<16&&!lookingAtPoint(tp,d.x,d.z,0.3))cd=1;}bb.set('closedDoor',cd);
+  return bb;}
+function lookingAtPoint(pl,x,z,cone){let yaw;if(pl.local)yaw=P.yaw;else{const a=G.avatars[pl.id];if(!a)return false;yaw=a.yaw;}const fx=-Math.sin(yaw),fz=-Math.cos(yaw);const tx=x-pl.pos.x,tz=z-pl.pos.z;const d=Math.hypot(tx,tz)||1;return (fx*tx+fz*tz)/d>(cone===undefined?0.5:cone);}
+function noteDoorClosed(pid,d){const D=G.director;if(!D||!d)return;D.closed.push({pid,id:d.id,t:G.t});if(D.closed.length>30)D.closed.shift();}
 function directorTick(dt){const D=G.director;D.aggro=Math.max(0,D.aggro-dt*0.02);D.tick+=dt;
-  D.nextEvent-=dt*(1+G.stage*0.12)*(G.mission.sandbox?0.4:1);
-  if(D.nextEvent<=0){D.nextEvent=45+Math.random()*45;if(G.t>=D.calmUntil||Math.random()<0.3){const pool=EVENT_DEFS.filter(e=>e.minStage<=G.stage&&!(G.mission.sandbox&&e.id==='creature'));const ev=wpick(pool,Math.random,e=>e.w*Math.pow(0.35,D.seen[e.id]||0)*(S.seenEvents[e.id]?0.7:1.35));D.seen[ev.id]=(D.seen[ev.id]||0)+1;S.seenEvents[ev.id]=(S.seenEvents[ev.id]||0)+1;runEvent(ev.id);}}
+  /* tension: creature proximity and noise push it up, quiet lets it bleed off */const want=Math.max(G.fx.danger||0,Math.min(1,(P.lastNoise||0)*1.5));D.tension=lerp(D.tension,want,1-Math.exp(-(want>D.tension?1.5:0.12)*dt));
+  for(const p of D.pending.slice()){if(G.t>=p.t){D.pending=D.pending.filter(x=>x!==p);try{p.fn();}catch(e){}}}
+  D.decideT-=dt;if(D.decideT<=0){D.decideT=3+Math.random()*3;const bb=directorFacts(D);if(bb){const calm=G.t<D.calmUntil;const cands=SCARE_MENU.filter(m=>m.min<=G.stage&&!(G.mission.sandbox&&m.big)&&!(m.big&&calm)&&G.t-(D.used[m.id]||-1e9)>=m.cd&&!(m.cd>=999&&D.used[m.id]!==undefined));
+      const scored=cands.map(m=>({id:m.id,m,score:bb=>m.fit(bb)*Math.pow(0.45,D.seen[m.id]||0)*(S.seenEvents[m.id]?0.85:1.25)}));const r=U.pick(scored,bb,null);
+      /* fire when the best scare is good enough; the gap since the last event raises the bar it must clear */const gap=G.t-(D.lastEventT||G.mission.startT||0);const bar=gap<18?9:Math.max(0.12,0.6-(gap-18)*0.005)*(G.mission.sandbox?1.6:1)/(1+G.stage*0.1);
+      if(r.a&&r.s>bar){const m=r.a.m;D.used[m.id]=G.t;D.seen[m.id]=(D.seen[m.id]||0)+1;S.seenEvents[m.id]=(S.seenEvents[m.id]||0)+1;D.lastEventT=G.t;if(m.big)D.lastBigT=G.t;runEvent(m.id,false,bb.get('tp'));}}}
   D.distantT-=dt;if(D.distantT<=0){D.distantT=14+Math.random()*25;runEvent('distant',true);}
 }
-function runEvent(id,quiet){const data={};const pls=alivePlayers();const tp=pls.length?pick(pls):null;
+function runEvent(id,quiet,chosen){const data={};const pls=alivePlayers();const tp=chosen||(pls.length?pick(pls):null);
   switch(id){
     case 'lightsout':data.t=20+Math.random()*25;break;
     case 'flicker':data.pid=tp?tp.id:P.id;break;
@@ -1702,10 +1764,19 @@ function runEvent(id,quiet){const data={};const pls=alivePlayers();const tp=pls.
     case 'creature':{if(!tp)return;const kind=pick(['hound','drifter','stack','drifter']);const rp=randomWalkCell(G.map,ri(Math.random,0,G.map.L-1));spawnCreature(kind,rp.x,rp.z,rp.k);if(kind==='drifter'){spawnCreature('drifter',rp.x+1,rp.z+1,rp.k);}return;}
     case 'intern':{if(G.mission.intern)return;const rp=pick(pick(G.map.layers).rooms);G.mission.intern={x:rp.cx-1,z:rp.cz+1,k:rp.k};data.p=[rp.cx-1,rp.cz+1];data.k=rp.k;break;}
     case 'radio':case 'alarm':case 'fakeexit':case 'mapglitch':break;
+    case 'peripheral':{if(!tp)return;const eco=(G.mission.eco&&G.mission.eco.length)?G.mission.eco:['echo'];const kind=pick(eco.filter(k=>k!=='window'&&k!=='hanger'&&k!=='mimic'))||'echo';let yaw;if(tp.local)yaw=P.yaw;else{const a=G.avatars[tp.id];yaw=a?a.yaw:0;}
+      let spot=null;for(let i=0;i<24&&!spot;i++){const side=Math.random()<0.5?-1:1;const ang=yaw+side*(0.95+Math.random()*0.5);const d=8+Math.random()*6;const x=tp.pos.x-Math.sin(ang)*d,z=tp.pos.z-Math.cos(ang)*d;if(cellAt(G.map,tp.k,x,z)===T_VOID)continue;if(!losClear(G.map,tp.k,tp.pos.x,tp.pos.z,x,z))continue;spot={x,z};}
+      if(!spot)return;data.kind=kind;data.p=[spot.x,layerY(tp.k),spot.z];data.k=tp.k;data.yaw=Math.atan2(tp.pos.x-spot.x,tp.pos.z-spot.z);data.pid=tp.id;break;}
+    case 'doorbehind':{if(!tp)return;const D=G.director;const cds=D.closed.filter(c=>c.pid===tp.id&&G.t-c.t<75&&G.doors[c.id]&&G.doors[c.id].open<0.5&&G.doors[c.id].k===tp.k);let best=null;for(const c of cds){const d=G.doors[c.id];const dist=dist2(d.x,d.z,tp.pos.x,tp.pos.z);if(dist>4&&dist<16&&!lookingAtPoint(tp,d.x,d.z,0.3))best=d;}if(!best)return;best.locked=false;setDoorHost(best,1,false);hostEvent(tp.id,{k:'doorbehind'});return;}
+    case 'whisper':{if(!tp)return;hostEvent(tp.id,{k:'whisper',i:1+Math.floor(Math.random()*3)});return;}
+    case 'fakeout':{if(!tp)return;const a=Math.random()*TAU,d=2.5+Math.random()*2;data.p=[tp.pos.x+Math.sin(a)*d,layerY(tp.k)+1,tp.pos.z+Math.cos(a)*d];data.pid=tp.id;
+      /* the real one: six to ten seconds after everyone relaxes */const D=G.director;D.pending.push({t:G.t+6+Math.random()*4,fn:()=>{const pl=alivePlayers().find(p=>p.id===tp.id);if(!pl||pl.inVan)return;const eco=(G.mission.eco&&G.mission.eco.length)?G.mission.eco.filter(k=>['hound','echo','stack','crawler','collector','sleeper'].indexOf(k)>=0):[];const kind=eco.length?pick(eco):'hound';const b=Math.random()*TAU;const rp=randomWalkCell(G.map,pl.k);spawnCreature(kind,rp.x,rp.z,pl.k,{state:kind==='hound'?'chase':'hunt'});const c=G.creatures[G.creatures.length-1];if(c){c.target=pl.id;c.lastSeen=G.t;c.lastHeard={x:pl.pos.x,z:pl.pos.z,k:pl.k,t:G.t,loud:1};}runEvent('lightsout');}});break;}
   }
   if(MP.on)bcast({t:'ev',k:'event',id,d:data});applyEvent(id,data,quiet);
 }
 function applyEvent(id,d,quiet){switch(id){
+    case 'peripheral':spawnGhost(d.kind,d.p,d.k,d.yaw,d.pid);break;
+    case 'fakeout':{const p=new THREE.Vector3(d.p[0],d.p[1],d.p[2]);if(!Aud.play('fake_drop',p,0.9))Aud.impact(0.8,p);if(S.set.subs)subtitle('[something fell]');if(d.pid===P.id)G.fx.shake+=0.25;break;}
   case 'lightsout':G.fx.lightsOut=d.t;toast('💡 The lights just went out.');Aud.tone(200,0.6,'sawtooth',0.1,null,{slide:60,lp:600});Aud.musicSet(Math.max(Aud.music.target||0,1));break;
   case 'flicker':if(d.pid===P.id){G.fx.flicker=7;toast('🔦 Your flashlight is flickering.');}break;
   case 'radio':{Aud.radioStatic(3,0.3);setTimeout(()=>{Aud.radioClick();if(Math.random()<0.5&&Aud.play('vo_radio_1',null,0.9,{noVar:true,lp:2800,dest:Aud.voiceBus})){}else echoPlayClip(null,true,0.7);subtitle('[unknown transmission on your channel]');},1200);$('radio').classList.add('rx');setTimeout(()=>$('radio').classList.remove('rx'),4000);G.fx.glitch=0.6;break;}
@@ -1749,7 +1820,11 @@ let sensorT=0;function updateSensor(dt){if(!S.up.sensor||P.dead)return;let best=
 
 function updateVanLock(dt){const locked=vanLocked();if(G.vanDoors){for(const d of G.vanDoors){const t=locked?0:d.userData.openY;d.rotation.set(0,lerp(d.rotation.y,t,Math.min(1,dt*2)),0);}}if(G.mission&&G.mission.vanWasLocked&&!locked){G.mission.vanWasLocked=false;toast('🚐 The van doors are open. Loot goes in the back.','big');Aud.door(new THREE.Vector3(G.map.van.x,1,G.map.van.z-4),true);}}
 function updateDissolve(dt){if(!G.dissolving)return;for(const d of G.dissolving.slice()){d.t+=dt;d.root.userData.dissolve.value=Math.min(1,d.t/1.1);if(d.mixer)d.mixer.update(dt);if(d.t>1.2){G.scene.remove(d.root);G.dissolving=G.dissolving.filter(x=>x!==d);}}}
-function updateLightsFx(dt){updateVanLock(dt);updateDissolve(dt);SHU.time.value=G.t;
+function spawnGhost(kind,p,k,yaw,pid){const rig=Assets.rig(kind);if(!rig)return;enhanceRig(rig.root,kind);rig.root.position.set(p[0],p[1],p[2]);rig.root.rotation.y=yaw+Math.PI;rig.root.traverse(o=>{if(o.isSprite)o.visible=false;});G.scene.add(rig.root);try{rig.play('idle',0);}catch(e){}
+  G.ghosts=G.ghosts||[];G.ghosts.push({rig,k,t:0,seen:0,pid,pos:new THREE.Vector3(p[0],p[1],p[2])});if(pid===P.id){Aud.creature(kind,new THREE.Vector3(p[0],p[1]+1,p[2]),0.35);}}
+function updateGhosts(dt){if(!G.ghosts)return;for(const g of G.ghosts.slice()){g.t+=dt;if(g.rig.mixer)g.rig.mixer.update(dt);const fake={pos:g.pos,k:g.k,dead:false,id:P.id,local:true};const look=P.k===g.k&&lookingAt(fake,{pos:P.pos,k:P.k,dead:false,id:P.id,local:true},24,0.9);if(look)g.seen+=dt;
+    if(g.seen>0.22||g.t>3.2){G.ghosts=G.ghosts.filter(x=>x!==g);if(g.rig.root.userData.dissolve){G.dissolving=G.dissolving||[];G.dissolving.push({root:g.rig.root,t:0,mixer:g.rig.mixer});}else G.scene.remove(g.rig.root);if(g.seen>0.22&&g.pid===P.id){G.fx.shake+=0.3;G.fx.glitch=Math.max(G.fx.glitch,0.5);Aud.sting('scare');if(S.set.subs)subtitle('[it was there]');if(!G.mission.ghostHint){G.mission.ghostHint=true;setTimeout(()=>toast('👁 Something was standing at the edge of your vision. It never stays where you look.','big'),600);}}}}}
+function updateLightsFx(dt){updateVanLock(dt);updateDissolve(dt);updateGhosts(dt);SHU.time.value=G.t;
   for(const l of G.lights){if(!l.glow)continue;const near=l.k===P.k&&dist2(l.x,l.z,P.pos.x,P.pos.z)<45;l.glow.visible=near;if(near){let it=l.on&&G.fx.lightsOut<=0?1:0;if(l.flicker&&Math.sin(G.t*23+l.phase)*Math.sin(G.t*7.3+l.phase)>0.6)it*=0.15;l.glow.material.opacity=0.42*it;}if(l.eglow){const e=near&&l.emerg&&!l.on;l.eglow.visible=e;if(e)l.eglow.material.opacity=0.3+0.3*Math.sin(G.t*2+l.phase);}}
   const cols={hanger:0xb0b090,collector:0xffb020,sleeper:0xff5010,mourner:0x000000,warden:0xff2a08,hound:0x40ff70,lighteater:0xff7a20,drifter:0x60e0ff,crawler:0xffe070,stack:0xffd040,echo:0x8090ff,window:0x000000};const cands=[];for(const c of G.creatures){if(!c.visible||c.k!==P.k||c.kind==='window')continue;const d=c.pos.distanceTo(P.pos);if(d<30)cands.push([d,c]);}cands.sort((a,b)=>a[0]-b[0]);
   (G.crLights||[]).forEach((pl,i)=>{const e=cands[i];if(!e){pl.intensity=0;return;}const c=e[1];pl.position.set(c.pos.x,c.pos.y+(c.kind==='warden'?3.2:c.kind==='lighteater'?1.2:c.kind==='drifter'?0.9:1.6),c.pos.z);pl.color.setHex(cols[c.kind]||0xffffff);pl.intensity=(c.kind==='warden'?1.2:0.55)*(0.85+0.15*Math.sin(G.t*9+i));});
@@ -1877,7 +1952,7 @@ function hostAct(id,a){const av=G.avatars[id];
     case 'grab':{const o=G.objById[a.id];if(!o||o.carrier||o.held!==null&&o.held!==id)return;o.held=id;o.lastHolder=id;o.sleep=false;o.mesh.visible=!a.pocket;if(av)av.hold=a.pocket?av.hold:o.id;bcast({t:'ev',k:'held',id:o.id,pid:id,pocket:!!a.pocket});if(o.special==='tag')objectiveProgress('researcher');break;}
     case 'grab2':{const o=G.objById[a.id];if(!o)return;if(o.holders.indexOf(id)<0)o.holders.push(id);o.sleep=false;bcast({t:'ev',k:'holders',id:o.id,h:o.holders});break;}
     case 'drop':{const o=G.objById[a.id];if(!o)return;o.held=null;o.holders=o.holders.filter(h=>h!==id);o.sleep=false;o.p.set(a.p[0],a.p[1],a.p[2]);o.v.set(a.v[0],a.v[1],a.v[2]);if(a.spin)o.spin=a.spin;o.mesh.visible=true;o.k=av?av.k:o.k;bcast({t:'ev',k:'held',id:o.id,pid:null,p:a.p,v:a.v,spin:a.spin||0},null);break;}
-    case 'door':{const d=G.doors[a.id];if(!d||d.locked&&!a.force)return;d.target=a.o;Aud.door(new THREE.Vector3(d.x,layerY(d.k)+1,d.z));emitNoiseHost(d.x,layerY(d.k),d.z,d.k,0.2,'door',id);bcast({t:'ev',k:'door',id:d.id,o:a.o});break;}
+    case 'door':{const d=G.doors[a.id];if(!d||d.locked&&!a.force)return;d.target=a.o;if(a.o===0)noteDoorClosed(id,d);Aud.door(new THREE.Vector3(d.x,layerY(d.k)+1,d.z));emitNoiseHost(d.x,layerY(d.k),d.z,d.k,0.2,'door',id);bcast({t:'ev',k:'door',id:d.id,o:a.o});break;}
     case 'unlock':{const d=G.doors[a.id];if(d){d.locked=false;d.target=1;G.director.aggro+=0.5;bcast({t:'ev',k:'unlock',id:d.id});}break;}
     case 'noise':emitNoiseHost(a.p[0],a.p[1],a.p[2],a.l,a.loud,a.kind,id);break;
     case 'doc':{const dd=G.docs.find(x=>x.id===a.id);if(dd){dd.read=true;if(dd.mesh)dd.mesh.visible=false;bcast({t:'ev',k:'doc',id:a.id});G.mission.docsRead=(G.mission.docsRead||0)+1;}break;}
@@ -2234,7 +2309,7 @@ function startMission(contract,seed,late){const loc=LOCS.find(l=>l.id===contract
   setTimeout(()=>{buildWorld(G.map);playerReset();initDirector();NOISES.length=0;
     /* creature ecosystem (host) */if(mpHost()&&!M.sandbox&&!M.tutorial){const rng=mulberry(seed^0x5bd1e995);let eco=pick(ECOSYSTEMS,rng);if(contract.diffId==='easy'&&eco.length>2)eco=eco.slice(0,2);if(contract.diffId==='extreme'||contract.diffId==='nightmare')eco=eco.concat([pick(['hound','crawler','echo'],rng)]);if(contract.mode==='nightmare')eco=eco.concat(['warden']);
       for(const kind of eco){const n=kind==='drifter'?3:1;for(let i=0;i<n;i++){const k=kind==='warden'?0:ri(rng,Math.min(1,G.map.L-1),G.map.L-1);const rp=randomWalkCell(G.map,k,rng);spawnEco(kind,k,rp,rng);}}
-      M.eco=eco;if($('cineDet'))$('cineDet').textContent=eco.length?eco.map(k=>CREATURES[k].n).join(' · '):'no major signatures (hazards likely)';}
+      M.eco=eco;M.startT=G.t;if($('cineDet'))$('cineDet').textContent=eco.length?eco.map(k=>CREATURES[k].n).join(' · '):'no major signatures (hazards likely)';}
     if(!mpHost()&&$('cineDet'))$('cineDet').textContent='host is scanning…';
     if(late){M.time=late.time||0;setStage(late.stage||1);}
     for(const id in MP.players){if(+id!==P.id)createAvatar(+id,MP.players[id]);}

@@ -40,6 +40,10 @@
    "file": "audio/amb_yard.mp3",
    "loop": true
   },
+  "breath_close": {
+   "file": "audio/breath_close.mp3",
+   "loop": false
+  },
   "burrower_burst": {
    "file": "audio/burrower_burst.mp3",
    "loop": false
@@ -90,6 +94,10 @@
   },
   "echo_whisper": {
    "file": "audio/echo_whisper.mp3",
+   "loop": false
+  },
+  "fake_drop": {
+   "file": "audio/fake_drop.mp3",
    "loop": false
   },
   "flare": {
@@ -350,6 +358,18 @@
   },
   "warden_stomp_2": {
    "file": "audio/warden_stomp_2.mp3",
+   "loop": false
+  },
+  "whisper_1": {
+   "file": "audio/whisper_1.mp3",
+   "loop": false
+  },
+  "whisper_2": {
+   "file": "audio/whisper_2.mp3",
+   "loop": false
+  },
+  "whisper_3": {
+   "file": "audio/whisper_3.mp3",
    "loop": false
   },
   "window_ring": {
